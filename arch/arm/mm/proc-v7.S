@@ -117,8 +117,15 @@ ENTRY(cpu_v7_iciallu_switch_mm)
 	b	cpu_v7_switch_mm
 ENDPROC(cpu_v7_iciallu_switch_mm)
 ENTRY(cpu_v7_bpiall_switch_mm)
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	mov r3, r0	//Save r0
+	mov r0, #6	//INVAL_ALL_BRANCH
+	swi 1004	//HYPERCALL_CACHE_OP
+	mov r0, r3	//Restore r0
+#else
 	mov	r3, #0
 	mcr	p15, 0, r3, c7, c5, 6		@ flush BTAC/BTB
+#endif
 	b	cpu_v7_switch_mm
 ENDPROC(cpu_v7_bpiall_switch_mm)
 

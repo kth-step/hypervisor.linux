@@ -167,7 +167,9 @@ void __show_regs(struct pt_regs *regs)
 #else
 	printk("xPSR: %08lx\n", regs->ARM_cpsr);
 #endif
-
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+asm volatile("swi 1099");
+#endif
 #ifdef CONFIG_CPU_CP15
 	{
 		unsigned int ctrl;

@@ -765,6 +765,7 @@ ENDPROC(__fiq_abt)
 	// that one, and so forth. This information is also used to restore the
 	// values of callee-saved registers in the function catching the exception."
  UNWIND(.cantunwind	)	@ don't unwind the user space
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 	//Decrements the stack pointer with the size of the pt_regs structure.
 	sub	sp, sp, #PT_REGS_SIZE
 	//Stores r1-r12 in pt_regs.r1 - pt_regs.t12.
@@ -830,6 +831,7 @@ ENDPROC(__fiq_abt)
 	//cr_alignment to coprocessor 15 register SCTLR.
 	//Thus, updates SCTLR if cr_alignment is distinct from SCTLR.
  ATRAP( mcrne	p15, 0, r8, c1, c0, 0)
+#endif	/* !CONFIG_TRUSTFULL_HYPERVISOR */
 
 	@
 	@ Clear FP to mark the first stack frame
@@ -1291,11 +1293,11 @@ ENDPROC(__und_usr_fault_16)
 	//Handles prefetch abort exception from user mode and may send a SIGSEGV
 	//signal or handle the fault depending on the type of fault.
 __pabt_usr:
-mov r0, #0x20
-mov r1, #0x20
-mov r2, #0x20
-swi 1045
-1:	b 1b
+//mov r0, #0x20
+//mov r1, #0x20
+//mov r2, #0x20
+//swi 1045
+//1:	b 1b
 	//Makes room for pt_regs on the stack, and stores in pt_regs r0-r12, lr_usr,
 	//sp_usr, memory[r0 + 4] (PC), memory[r0 + 8] (CPSR), and 0xFFFF_FFFF
 	//(orig_r0). If cr_alignment is not equal to SCTLR, then updates SCTLR to

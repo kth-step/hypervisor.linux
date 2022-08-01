@@ -283,6 +283,12 @@ ENTRY(v7_coherent_kern_range)
  */
 ENTRY(v7_coherent_user_range)
  UNWIND(.fnstart		)
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	mov r2, r1
+	mov r1, r0
+	mov r0, #13	//COHERENT_RANGE
+	swi 1004	//HYPERCALL_CACHE_OP
+#else
 	dcache_line_size r2, r3
 	sub	r3, r2, #1
 	bic	r12, r0, r3
@@ -314,6 +320,7 @@ ENTRY(v7_coherent_user_range)
 	ALT_UP(mcr	p15, 0, r0, c7, c5, 6)	@ invalidate BTB
 	dsb	ishst
 	isb
+#endif
 	ret	lr
 
 /*

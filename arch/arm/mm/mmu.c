@@ -1844,6 +1844,11 @@ void set_pte_at(struct mm_struct *mm, unsigned long addr,
 			__sync_icache_dcache(pteval);
 		ext |= PTE_EXT_NG;
 	}
-
+if (ptep == 0xC1DE37FC)
+asm volatile ("mov R0, %0	\n\t"
+			  "mov R1, %1	\n\t"
+			  "mov R2, %2	\n\t"
+			  "SWI 1045"
+			  :: "r" (0xAAAAAAAA), "r" (addr), "r" (0xAAAAAAA2) : "memory", "r0", "r1", "r2");
 	set_pte_ext(ptep, pteval, ext);
 }

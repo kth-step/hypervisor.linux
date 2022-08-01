@@ -243,12 +243,14 @@ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk)
 	if (unlikely(mm->context.vmalloc_seq != init_mm.context.vmalloc_seq))
 		__check_vmalloc_seq(mm);
 
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR	//Hypervisor manages TTBR0.
 	/*
 	 * We cannot update the pgd and the ASID atomicly with classic
 	 * MMU, so switch exclusively to global mappings to avoid
 	 * speculative page table walking with the wrong TTBR.
 	 */
 	cpu_set_reserved_ttbr0();
+#endif
 
 	asid = atomic64_read(&mm->context.id);
 	if (!((asid ^ atomic64_read(&asid_generation)) >> ASID_BITS)

@@ -51,7 +51,15 @@ ENTRY(v7wbi_flush_user_tlb_range)
 #else
 	ALT_SMP(mcr	p15, 0, r0, c8, c3, 1)	@ TLB invalidate U MVA (shareable)
 #endif
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	push {r0, r1}
+	mov r1, r0						@ MVA
+	mov r0, #8						@ INVALIDATE TLB MVA Operation
+	swi HYPERCALL_CACHE_OP
+	pop {r0, r1}
+#else
 	ALT_UP(mcr	p15, 0, r0, c8, c7, 1)	@ TLB invalidate U MVA
+#endif
 
 	add	r0, r0, #PAGE_SZ
 	cmp	r0, r1

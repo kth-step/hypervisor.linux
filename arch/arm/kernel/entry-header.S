@@ -233,9 +233,6 @@
 	blne	trace_hardirqs_off
 #endif
 	.endif
-	//Reads DACR from svc_pt_regs, and restores DACR to that value.
-	uaccess_exit tsk, r0, r1
-
 #ifdef CONFIG_TRUSTFULL_HYPERVISOR
 	//Returns to point before exception now, meaning that the following code is
 	//not executed.
@@ -244,6 +241,9 @@
 	strex	r1, r2, [r0]			@ clear the exclusive monitor
 	mov r0, sp						//Argument to HYPERCALL_RESTORE_REGS is stack pointer.
 	swi HYPERCALL_RESTORE_REGS
+#else
+	//Reads DACR from svc_pt_regs, and restores DACR to that value.
+	uaccess_exit tsk, r0, r1
 #endif
 
 #ifndef CONFIG_THUMB2_KERNEL	//TRUE since CONFIG_THUMB2_KERNEL is not set.
@@ -356,6 +356,15 @@
 	//		execution in user mode from the corrected link register address
 	//		stored during the exception.
 	.macro	restore_user_regs, fast = 0, offset = 0
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+#if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_32v6K)	//TRUE
+	@ We must avoid clrex due to Cortex-A15 erratum #830321
+	ldr r2, [sp]
+	strex	r1, r2, [sp]			@ clear the exclusive monitor
+#endif
+	mov r1, #\fast
+	swi HYPERCALL_RESTORE_LINUX_REGS
+#else	/* !CONFIG_TRUSTFULL_HYPERVISOR */
 	//Sets DACR such that all addresses of the kernel, I/O, exception vectors
 	//and handlers, and user space, are accessible according to the page tables.
 	//r1 is temporary register.
@@ -368,6 +377,7 @@
 	ldr	r1, [r2, #\offset + S_PSR]	@ get calling cpsr
 	//lr := pt_regs.PC = lr_<exception processor mode> - \correction
 	//sp_svc := sp_svc + #\offset + S_PC = &pt_regs.pc
+	//r2 = r2 + #\offset + S_PC = sp + #\offset + S_PC
 	ldr	lr, [r2, #\offset + S_PC]!	@ get pc
 	//AND between r1 and 0x0000008F and sets condition flags accordingly.
 	tst	r1, #PSR_I_BIT | 0x0f
@@ -379,7 +389,7 @@
 	msr	spsr_cxsf, r1			@ save in spsr_svc
 #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_32v6K)	//TRUE
 	@ We must avoid clrex due to Cortex-A15 erratum #830321
-	//r1 := 0 if memory[sp - 4] := r2 is sucessful. Otherwise r1 := 1.
+	//r1 := 0 if memory[sp + #\offset + S_PC] := r2 is sucessful. Otherwise r1 := 1.
 	strex	r1, r2, [r2]			@ clear the exclusive monitor
 #endif
 	.if	\fast
@@ -439,6 +449,7 @@
 	movs	pc, lr				@ return & move spsr_svc into cpsr
 1:	bug	"Returning to usermode but unexpected PSR bits set?", \@
 #endif	/* !CONFIG_THUMB2_KERNEL */
+#endif	/* !CONFIG_TRUSTFULL_HYPERVISOR */
 	.endm
 
 /*

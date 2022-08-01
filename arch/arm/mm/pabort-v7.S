@@ -16,7 +16,9 @@
 
 	.align	5
 ENTRY(v7_pabort)
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 	mrc	p15, 0, r0, c6, c0, 2		@ get IFAR
 	mrc	p15, 0, r1, c5, c0, 1		@ get IFSR
+#endif
 	b	do_PrefetchAbort
 ENDPROC(v7_pabort)
