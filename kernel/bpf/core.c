@@ -84,6 +84,7 @@ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flag
 	struct bpf_prog *fp;
 
 	size = round_up(size, PAGE_SIZE);
+//Här fallerar det.
 	fp = __vmalloc(size, gfp_flags);
 	if (fp == NULL)
 		return NULL;

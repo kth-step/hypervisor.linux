@@ -456,11 +456,6 @@ static inline void vma_rb_insert(struct vm_area_struct *vma,
 {
 	/* All rb_subtree_gap values must be consistent prior to insertion */
 	validate_mm_rb(root, NULL);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBBBBBBBB), "r" (root), "r" (&vma->vm_rb) : "memory", "r0", "r1", "r2");
 	rb_insert_augmented(&vma->vm_rb, root, &vma_gap_callbacks);
 }
 
@@ -658,11 +653,6 @@ void __vma_link_rb(struct mm_struct *mm, struct vm_area_struct *vma,
 	rb_link_node(&vma->vm_rb, rb_parent, rb_link);
 	vma->rb_subtree_gap = 0;
 	vma_gap_update(vma);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00009) : "memory", "r0", "r1", "r2");
 	vma_rb_insert(vma, &mm->mm_rb);
 }
 
@@ -689,11 +679,6 @@ __vma_link(struct mm_struct *mm, struct vm_area_struct *vma,
 	struct rb_node *rb_parent)
 {
 	__vma_link_list(mm, vma, prev);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00008) : "memory", "r0", "r1", "r2");
 	__vma_link_rb(mm, vma, rb_link, rb_parent);
 }
 
@@ -707,11 +692,7 @@ static void vma_link(struct mm_struct *mm, struct vm_area_struct *vma,
 		mapping = vma->vm_file->f_mapping;
 		i_mmap_lock_write(mapping);
 	}
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00007) : "memory", "r0", "r1", "r2");
+
 	__vma_link(mm, vma, prev, rb_link, rb_parent);
 	__vma_link_file(vma);
 
@@ -2668,8 +2649,10 @@ static void unmap_region(struct mm_struct *mm,
 	tlb_gather_mmu(&tlb, mm);
 	update_hiwater_rss(mm);
 	unmap_vmas(&tlb, vma, start, end);
+printk("mm/mmap.c:unmap_region1\n");
 	free_pgtables(&tlb, vma, prev ? prev->vm_end : FIRST_USER_ADDRESS,
 				 next ? next->vm_start : USER_PGTABLES_CEILING);
+printk("mm/mmap.c:unmap_region2\n");
 	tlb_finish_mmu(&tlb);
 }
 
@@ -3188,8 +3171,11 @@ void exit_mmap(struct mm_struct *mm)
 	tlb_gather_mmu_fullmm(&tlb, mm);
 	/* update_hiwater_rss(mm) here? but nobody should be looking */
 	/* Use -1 here to ensure all VMAs in the mm are unmapped */
+printk("mm/mmap.c:exit_mmap0\n");
 	unmap_vmas(&tlb, vma, 0, -1);
+printk("mm/mmap.c:exit_mmap1\n");
 	free_pgtables(&tlb, vma, FIRST_USER_ADDRESS, USER_PGTABLES_CEILING);
+printk("mm/mmap.c:exit_mmap2\n");
 	tlb_finish_mmu(&tlb);
 
 	/*

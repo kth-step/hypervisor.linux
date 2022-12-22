@@ -209,12 +209,142 @@ static struct map_desc omapam33xx_io_desc[] __initdata = {
 #ifdef CONFIG_TRUSTFULL_HYPERVISOR
 #define CPSW_SS_VIRT 0xFA400000
 #define CPSW_SS_PHYS 0x4A100000
-#define CPSW_SS_SIZE 0x00008000
+#define CPSW_SS_SIZE 0x00004000
 	,
 	{
 		.virtual	= CPSW_SS_VIRT,
 		.pfn 		= __phys_to_pfn(CPSW_SS_PHYS),
 		.length		= CPSW_SS_SIZE,
+		.type		= MT_DEVICE
+	}
+#define PRU_ICSS_VIRT (CPSW_SS_VIRT + CPSW_SS_SIZE)
+#define PRU_ICSS_PHYS 0x4A300000
+#define PRU_ICSS_SIZE 0x00027000
+	,
+	{
+		.virtual	= PRU_ICSS_VIRT,
+		.pfn 		= __phys_to_pfn(PRU_ICSS_PHYS),
+		.length		= PRU_ICSS_SIZE,
+		.type		= MT_DEVICE
+	}
+#define TPCC_VIRT (PRU_ICSS_VIRT + PRU_ICSS_SIZE)
+#define TPCC_PHYS 0x49000000
+#define TPCC_SIZE 0x00001000
+	,
+	{
+		.virtual	= TPCC_VIRT,
+		.pfn 		= __phys_to_pfn(TPCC_PHYS),
+		.length		= TPCC_SIZE,
+		.type		= MT_DEVICE
+	}
+#define TPTC0_VIRT (TPCC_VIRT + TPCC_SIZE)
+#define TPTC0_PHYS 0x49800000
+#define TPTC0_SIZE 0x00001000
+	,
+	{
+		.virtual	= TPTC0_VIRT,
+		.pfn 		= __phys_to_pfn(TPTC0_PHYS),
+		.length		= TPTC0_SIZE,
+		.type		= MT_DEVICE
+	}
+#define TPTC1_VIRT (TPTC0_VIRT + TPTC0_SIZE)
+#define TPTC1_PHYS 0x49900000
+#define TPTC1_SIZE 0x00001000
+	,
+	{
+		.virtual	= TPTC1_VIRT,
+		.pfn 		= __phys_to_pfn(TPTC1_PHYS),
+		.length		= TPTC1_SIZE,
+		.type		= MT_DEVICE
+	}
+#define TPTC2_VIRT (TPTC1_VIRT + TPTC1_SIZE)
+#define TPTC2_PHYS 0x49A00000
+#define TPTC2_SIZE 0x00001000
+	,
+	{
+		.virtual	= TPTC2_VIRT,
+		.pfn 		= __phys_to_pfn(TPTC2_PHYS),
+		.length		= TPTC2_SIZE,
+		.type		= MT_DEVICE
+	}
+#define MMCHS2_VIRT (TPTC2_VIRT + TPTC2_SIZE)
+#define MMCHS2_PHYS 0x47810000
+#define MMCHS2_SIZE 0x00001000
+	,
+	{
+		.virtual	= MMCHS2_VIRT,
+		.pfn 		= __phys_to_pfn(MMCHS2_PHYS),
+		.length		= MMCHS2_SIZE,
+		.type		= MT_DEVICE
+	}
+#define USBSS_VIRT (MMCHS2_VIRT + MMCHS2_SIZE)
+#define USBSS_PHYS 0x47400000
+#define USBSS_SIZE 0x00008000
+	,
+	{
+		.virtual	= USBSS_VIRT,
+		.pfn 		= __phys_to_pfn(USBSS_PHYS),
+		.length		= USBSS_SIZE,
+		.type		= MT_DEVICE
+	}
+#define L3OCMC0_VIRT (USBSS_VIRT + USBSS_SIZE)
+#define L3OCMC0_PHYS 0x40300000
+#define L3OCMC0_SIZE 0x00010000
+	,
+	{
+		.virtual	= L3OCMC0_VIRT,
+		.pfn 		= __phys_to_pfn(L3OCMC0_PHYS),
+		.length		= L3OCMC0_SIZE,
+		.type		= MT_DEVICE_WC
+	}
+#define EMIF0_VIRT (L3OCMC0_VIRT + L3OCMC0_SIZE)
+#define EMIF0_PHYS 0x4C000000
+#define EMIF0_SIZE 0x00001000
+	,
+	{
+		.virtual	= EMIF0_VIRT,
+		.pfn 		= __phys_to_pfn(EMIF0_PHYS),
+		.length		= EMIF0_SIZE,
+		.type		= MT_DEVICE
+	}
+#define GPMC_VIRT (EMIF0_VIRT + EMIF0_SIZE)
+#define GPMC_PHYS 0x50000000
+#define GPMC_SIZE 0x00001000
+	,
+	{
+		.virtual	= GPMC_VIRT,
+		.pfn 		= __phys_to_pfn(GPMC_PHYS),
+		.length		= GPMC_SIZE,
+		.type		= MT_DEVICE
+	}
+#define SHAM_VIRT (GPMC_VIRT + GPMC_SIZE)
+#define SHAM_PHYS 0x53100000
+#define SHAM_SIZE 0x00001000
+	,
+	{
+		.virtual	= SHAM_VIRT,
+		.pfn 		= __phys_to_pfn(SHAM_PHYS),
+		.length		= SHAM_SIZE,
+		.type		= MT_DEVICE
+	}
+#define AES_VIRT (SHAM_VIRT + SHAM_SIZE)
+#define AES_PHYS 0x53500000
+#define AES_SIZE 0x00001000
+	,
+	{
+		.virtual	= AES_VIRT,
+		.pfn 		= __phys_to_pfn(AES_PHYS),
+		.length		= AES_SIZE,
+		.type		= MT_DEVICE
+	}
+#define SGX530_VIRT (AES_VIRT + AES_SIZE)
+#define SGX530_PHYS 0x56000000
+#define SGX530_SIZE 0x00010000
+	,
+	{
+		.virtual	= SGX530_VIRT,
+		.pfn 		= __phys_to_pfn(SGX530_PHYS),
+		.length		= SGX530_SIZE,
 		.type		= MT_DEVICE
 	}
 #endif

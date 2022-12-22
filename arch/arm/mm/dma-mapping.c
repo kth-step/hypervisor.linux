@@ -431,8 +431,9 @@ void __init dma_contiguous_remap(void)
 		 * (even though they may be rare) can not cause any problems,
 		 * and ensures that this code is architecturally compliant.
 		 */
-#ifndef CONFIG_TRUSTFULL_HYPERVISOR
-//		HYPERCALL_2(1055, __phys_to_virt(start), __phys_to_virt(end));
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+		HYPERCALL_2(1055, __phys_to_virt(start), __phys_to_virt(end));
+#else
 		//Removes mappings to be remapped. iotable_init updates some data
 		//structures, but does not remap.
 		for (addr = __phys_to_virt(start); addr < __phys_to_virt(end);

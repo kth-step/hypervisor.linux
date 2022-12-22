@@ -937,6 +937,7 @@ static int sysc_ioremap(struct sysc *ddata)
 	ddata->module_va = devm_ioremap(ddata->dev,
 					ddata->module_pa,
 					size + sizeof(u32));
+
 	if (!ddata->module_va)
 		return -EIO;
 
@@ -1753,9 +1754,24 @@ static u32 sysc_quirk_dispc(struct sysc *ddata, int dispc_offset,
 
 	/* Remap the whole module range to be able to reset dispc outputs */
 	devm_iounmap(ddata->dev, ddata->module_va);
+asm volatile ("mov R0, %0	\n\t"
+			  "mov R1, %1	\n\t"
+			  "mov R2, %2	\n\t"
+			  "SWI 1045"
+			  :: "r" (0xEEEEEEEE), "r" (ddata->module_va), "r" (0xEEEEEEEE) : "memory", "r0", "r1", "r2");
+asm volatile ("mov R0, %0	\n\t"
+			  "mov R1, %1	\n\t"
+			  "mov R2, %2	\n\t"
+			  "SWI 1045"
+			  :: "r" (0xEEEEEEEE), "r" (ddata->module_pa), "r" (0xEEEEEEEE) : "memory", "r0", "r1", "r2");
 	ddata->module_va = devm_ioremap(ddata->dev,
 					ddata->module_pa,
 					ddata->module_size);
+asm volatile ("mov R0, %0	\n\t"
+			  "mov R1, %1	\n\t"
+			  "mov R2, %2	\n\t"
+			  "SWI 1045"
+			  :: "r" (0xEEEEEEEE), "r" (ddata->module_size), "r" (0xEEEEEEEF) : "memory", "r0", "r1", "r2");
 	if (!ddata->module_va)
 		return -EIO;
 

@@ -419,13 +419,23 @@ static inline void section_update(unsigned long addr, pmdval_t mask,
 	pmd[0] = __pmd((pmd_val(pmd[0]) & mask) | prot);
 #else
 	if (addr & SECTION_SIZE)
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+		HYPERCALL_3(HYPERCALL_UPDATE_PMD_SINGLE, &(pmd[1]), mask, prot)
+#else
 		pmd[1] = __pmd((pmd_val(pmd[1]) & mask) | prot);
+#endif
 	else
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+		HYPERCALL_3(HYPERCALL_UPDATE_PMD_SINGLE, &(pmd[0]), mask, prot)
+#else
 		pmd[0] = __pmd((pmd_val(pmd[0]) & mask) | prot);
 #endif
+#endif
 
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 	flush_pmd_entry(pmd);
 	local_flush_tlb_kernel_range(addr, addr + SECTION_SIZE);
+#endif
 }
 
 /* Make sure extended page tables are in use. */

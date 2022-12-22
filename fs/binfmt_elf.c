@@ -385,38 +385,12 @@ static unsigned long elf_map(struct file *filep, unsigned long addr,
 	*/
 	if (total_size) {
 		total_size = ELF_PAGEALIGN(total_size);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00000) : "memory", "r0", "r1", "r2");
 		map_addr = vm_mmap(filep, addr, total_size, prot, type, off);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00001) : "memory", "r0", "r1", "r2");
-		if (!BAD_ADDR(map_addr)) {
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00002) : "memory", "r0", "r1", "r2");
+
+		if (!BAD_ADDR(map_addr)) 
 			vm_munmap(map_addr+size, total_size-size);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00003) : "memory", "r0", "r1", "r2");
-}
-	} else {
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEA0000E), "r" (0xBEA0000E), "r" (0xBEA00004) : "memory", "r0", "r1", "r2");
+	} else
 		map_addr = vm_mmap(filep, addr, size, prot, type, off);
-}
 
 	if ((type & MAP_FIXED_NOREPLACE) &&
 	    PTR_ERR((void *)map_addr) == -EEXIST)
@@ -1040,20 +1014,18 @@ out_free_interp:
 
 	setup_new_exec(bprm);
 
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000000) : "memory", "r0", "r1", "r2");
 	/* Do this so that we can load the interpreter, if need be.  We will
 	   change some of these later */
+//#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+möjliggör randomisering igen.
+//	retval = setup_arg_pages(bprm, STACK_TOP, executable_stack);
+//#else
+printk("fs/binfmt_elf.c:load_elf_binary1\n");
 	retval = setup_arg_pages(bprm, randomize_stack_top(STACK_TOP),
 				 executable_stack);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (retval), "r" (0xBE000001) : "memory", "r0", "r1", "r2");
+printk("fs/binfmt_elf.c:load_elf_binary2\n");
+//#endif
+
 	if (retval < 0)
 		goto out_free_dentry;
 	
@@ -1073,11 +1045,7 @@ asm volatile ("mov R0, %0	\n\t"
 		unsigned long k, vaddr;
 		unsigned long total_size = 0;
 		unsigned long alignment;
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (retval), "r" (0xBE00000A) : "memory", "r0", "r1", "r2");
+
 		if (elf_ppnt->p_type != PT_LOAD)
 			continue;
 
@@ -1107,18 +1075,9 @@ asm volatile ("mov R0, %0	\n\t"
 				}
 			}
 		}
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (retval), "r" (0xBE00000B) : "memory", "r0", "r1", "r2");
+
 		elf_prot = make_prot(elf_ppnt->p_flags, &arch_state,
 				     !!interpreter, false);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (retval), "r" (0xBE00000C) : "memory", "r0", "r1", "r2");
 		elf_flags = MAP_PRIVATE;
 
 		vaddr = elf_ppnt->p_vaddr;
@@ -1161,8 +1120,10 @@ asm volatile ("mov R0, %0	\n\t"
 			 */
 			if (interpreter) {
 				load_bias = ELF_ET_DYN_BASE;
+//#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 				if (current->flags & PF_RANDOMIZE)
 					load_bias += arch_mmap_rnd();
+//#endif
 				alignment = maximum_alignment(elf_phdata, elf_ex->e_phnum);
 				if (alignment)
 					load_bias &= ~(alignment - 1);
@@ -1186,11 +1147,7 @@ asm volatile ("mov R0, %0	\n\t"
 				goto out_free_dentry;
 			}
 		}
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE00000D) : "memory", "r0", "r1", "r2");
+
 		error = elf_map(bprm->file, load_bias + vaddr, elf_ppnt,
 				elf_prot, elf_flags, total_size);
 		if (BAD_ADDR(error)) {
@@ -1242,11 +1199,7 @@ asm volatile ("mov R0, %0	\n\t"
 			elf_brk = k;
 		}
 	}
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000002) : "memory", "r0", "r1", "r2");
+
 	e_entry = elf_ex->e_entry + load_bias;
 	elf_bss += load_bias;
 	elf_brk += load_bias;
@@ -1263,15 +1216,12 @@ asm volatile ("mov R0, %0	\n\t"
 	retval = set_brk(elf_bss, elf_brk, bss_prot);
 	if (retval)
 		goto out_free_dentry;
+
 	if (likely(elf_bss != elf_brk) && unlikely(padzero(elf_bss))) {
 		retval = -EFAULT; /* Nobody gets to see this, but.. */
 		goto out_free_dentry;
 	}
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000003) : "memory", "r0", "r1", "r2");
+
 	if (interpreter) {
 		elf_entry = load_elf_interp(interp_elf_ex,
 					    interpreter,
@@ -1304,43 +1254,16 @@ asm volatile ("mov R0, %0	\n\t"
 			goto out_free_dentry;
 		}
 	}
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000004) : "memory", "r0", "r1", "r2");
+
 	kfree(elf_phdata);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000005) : "memory", "r0", "r1", "r2");
 	set_binfmt(&elf_format);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000006) : "memory", "r0", "r1", "r2");
+
 #ifdef ARCH_HAS_SETUP_ADDITIONAL_PAGES
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000007) : "memory", "r0", "r1", "r2");
 	retval = ARCH_SETUP_ADDITIONAL_PAGES(bprm, elf_ex, !!interpreter);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000008) : "memory", "r0", "r1", "r2");
 	if (retval < 0)
 		goto out;
 #endif /* ARCH_HAS_SETUP_ADDITIONAL_PAGES */
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBE000000), "r" (0xBE000000), "r" (0xBE000009) : "memory", "r0", "r1", "r2");
+
 	retval = create_elf_tables(bprm, elf_ex,
 			  load_addr, interp_load_addr, e_entry);
 	if (retval < 0)
@@ -1353,6 +1276,7 @@ asm volatile ("mov R0, %0	\n\t"
 	mm->end_data = end_data;
 	mm->start_stack = bprm->p;
 
+//#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 	if ((current->flags & PF_RANDOMIZE) && (randomize_va_space > 1)) {
 		/*
 		 * For architectures with ELF randomization, when executing
@@ -1371,6 +1295,7 @@ asm volatile ("mov R0, %0	\n\t"
 		current->brk_randomized = 1;
 #endif
 	}
+//#endif
 
 	if (current->personality & MMAP_PAGE_ZERO) {
 		/* Why this, you ask???  Well SVr4 maps page 0 as read-only,

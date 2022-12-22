@@ -936,13 +936,6 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	char *command_line;
 	char *after_dashes;
 
-printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
 	debug_objects_early_init();
@@ -1376,7 +1369,7 @@ static int __init ignore_unknown_bootoption(char *param, char *val,
 static void __init do_initcall_level(int level, char *command_line)
 {
 	initcall_entry_t *fn;
-int count = 0;
+
 	parse_args(initcall_level_names[level],
 		   command_line, __start___param,
 		   __stop___param - __start___param,
@@ -1384,24 +1377,8 @@ int count = 0;
 		   NULL, ignore_unknown_bootoption);
 
 	trace_initcall_level(initcall_level_names[level]);
-	for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++) {
-//if (level == 6) printk("init/main.c:do_initcall_level6: START %p\n", initcall_from_entry(fn));
-//if (level == 7) printk("init/main.c:do_initcall_level: START %p, count = %d\n", initcall_from_entry(fn), count);
-//asm volatile ("mov R0, %0	\n\t"
-//			  "mov R1, %1	\n\t"
-//			  "mov R2, %2	\n\t"
-//			  "SWI 1045"
-//			  :: "r" (0xAAAAAAAA), "r" (initcall_from_entry(fn)), "r" (level) : "memory", "r0", "r1", "r2");
+	for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
 		do_one_initcall(initcall_from_entry(fn));
-//asm volatile ("mov R0, %0	\n\t"
-//			  "mov R1, %1	\n\t"
-//			  "mov R2, %2	\n\t"
-//			  "SWI 1045"
-//			  :: "r" (0xAAAAAAAB), "r" (initcall_from_entry(fn)), "r" (level) : "memory", "r0", "r1", "r2");
-//if (level == 6) printk("init/main.c:do_initcall_level6: END %p\n", initcall_from_entry(fn));
-//if (level == 7) printk("init/main.c:do_initcall_level: END, count = %d\n", count);
-//if (level == 7) count++;
-}
 }
 
 static void __init do_initcalls(void)
@@ -1437,12 +1414,6 @@ static void __init do_basic_setup(void)
 	init_irq_proc();
 	do_ctors();
 	do_initcalls();
-asm volatile ("ldr R0, =0xEEEEEEEE	\n\t"
-			  "ldr R1, =0xEEEEEEEE	\n\t"
-			  "ldr R2, =0xEEEEEEEE	\n\t"
-			  "SWI 1045"
-			  ::: "r0", "r1", "r2");
-while (1);
 }
 
 static void __init do_pre_smp_initcalls(void)
@@ -1537,12 +1508,6 @@ static int __ref kernel_init(void *unused)
 	wait_for_completion(&kthreadd_done);
 
 	kernel_init_freeable();
-asm volatile ("ldr R0, =0xDDDDDDDD	\n\t"
-			  "ldr R1, =0x3333DDDD	\n\t"
-			  "ldr R2, =0x33333333	\n\t"
-			  "SWI 1045"
-			  ::: "r0", "r1", "r2");
-while (1);
 
 	/* need to finish all async __init code before freeing the memory */
 	async_synchronize_full();

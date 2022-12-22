@@ -79,7 +79,11 @@ ENTRY(vfp_support_entry)
 	DBGSTR3	"instr %08x pc %08x state %p", r0, r2, r10
 
 	.fpu	vfpv2
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	swi 1064
+#else
 	VFPFMRX	r1, FPEXC		@ Is the VFP enabled?
+#endif
 	DBGSTR1	"fpexc %08x", r1
 	tst	r1, #FPEXC_EN
 	bne	look_for_VFP_exceptions	@ VFP is already enabled
@@ -90,7 +94,7 @@ ENTRY(vfp_support_entry)
 	ldr	r4, [r3, r11, lsl #2]	@ vfp_current_hw_state pointer
 	bic	r5, r1, #FPEXC_EX	@ make sure exceptions are disabled
 	cmp	r4, r10			@ this thread owns the hw context?
-#ifndef CONFIG_SMP
+#ifndef CONFIG_SMP	//TRUE SINCE NOT DEFINED
 	@ For UP, checking that this thread owns the hw context is
 	@ sufficient to determine that the hardware state is valid.
 	beq	vfp_hw_state_valid
@@ -99,16 +103,20 @@ ENTRY(vfp_support_entry)
 	@ thread wants ownership of the VFP hardware, save the old
 	@ state if there was a previous (valid) owner.
 
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	swi 1065
+#else
 	VFPFMXR	FPEXC, r5		@ enable VFP, disable any pending
 					@ exceptions, so we can get at the
 					@ rest of it
+#endif
 
 	DBGSTR1	"save old state %p", r4
 	cmp	r4, #0			@ if the vfp_current_hw_state is NULL
 	beq	vfp_reload_hw		@ then the hw state needs reloading
 	VFPFSTMIA r4, r5		@ save the working registers
 	VFPFMRX	r5, FPSCR		@ current status
-#ifndef CONFIG_CPU_FEROCEON
+#ifndef CONFIG_CPU_FEROCEON	//TRUE SINCE NOT DEFINED
 	tst	r1, #FPEXC_EX		@ is there additional state to save?
 	beq	1f
 	VFPFMRX	r6, FPINST		@ FPINST (only if FPEXC.EX is set)
@@ -120,7 +128,7 @@ ENTRY(vfp_support_entry)
 	stmia	r4, {r1, r5, r6, r8}	@ save FPEXC, FPSCR, FPINST, FPINST2
 vfp_reload_hw:
 
-#else
+#else	//FALSE SINCE CONFIG_SMP IS NOT DEFINED
 	@ For SMP, if this thread does not own the hw context, then we
 	@ need to reload it.  No need to save the old state as on SMP,
 	@ we always save the state when we switch away from a thread.
@@ -148,10 +156,19 @@ vfp_reload_hw:
 	DBGSTR1	"load state %p", r10
 	str	r10, [r3, r11, lsl #2]	@ update the vfp_current_hw_state pointer
 					@ Load the saved state back into the VFP
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	vldmia	r10!, {d0-d15}
+	swi 1066	//vmrs	r5, mvfr0
+	and	r5, r5, #15
+	cmp	r5, #2
+	vldmiaeq	r10!, {d16-d31}
+	addne	r10, r10, #128	//128 = 32*4
+#else
 	VFPFLDMIA r10, r5		@ reload the working registers while
 					@ FPEXC is in a safe state
+#endif
 	ldmia	r10, {r1, r5, r6, r8}	@ load FPEXC, FPSCR, FPINST, FPINST2
-#ifndef CONFIG_CPU_FEROCEON
+#ifndef CONFIG_CPU_FEROCEON	//TRUE SINCE NOT DEFINED
 	tst	r1, #FPEXC_EX		@ is there additional state to restore?
 	beq	1f
 	VFPFMXR	FPINST, r6		@ restore FPINST (only if FPEXC.EX is set)
@@ -160,7 +177,11 @@ vfp_reload_hw:
 	VFPFMXR	FPINST2, r8		@ FPINST2 if needed (and present)
 1:
 #endif
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	swi 1067
+#else
 	VFPFMXR	FPSCR, r5		@ restore status
+#endif
 
 @ The context stored in the VFP hardware is up to date with this thread
 vfp_hw_state_valid:
@@ -169,7 +190,11 @@ vfp_hw_state_valid:
 					@ exception before retrying branch
 					@ out before setting an FPEXC that
 					@ stops us reading stuff
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	swi 1068
+#else
 	VFPFMXR	FPEXC, r1		@ Restore FPEXC last
+#endif
 	sub	r2, r2, #4		@ Retry current instruction - if Thumb
 	str	r2, [sp, #S_PC]		@ mode it's two 16-bit instructions,
 					@ else it's one 32-bit instruction, so
@@ -177,7 +202,6 @@ vfp_hw_state_valid:
 					@ instruction address.
 	dec_preempt_count_ti r10, r4
 	ret	r9			@ we think we have handled things
-
 
 look_for_VFP_exceptions:
 	@ Check for synchronous or asynchronous exception
@@ -241,11 +265,11 @@ vfp_current_hw_state_address:
 	.word	vfp_current_hw_state
 
 	.macro	tbl_branch, base, tmp, shift
-#ifdef CONFIG_THUMB2_KERNEL
+#ifdef CONFIG_THUMB2_KERNEL	//FALSE
 	adr	\tmp, 1f
 	add	\tmp, \tmp, \base, lsl \shift
 	ret	\tmp
-#else
+#else						//TRUE
 	add	pc, pc, \base, lsl \shift
 	mov	r0, r0
 #endif
@@ -290,7 +314,7 @@ ENTRY(vfp_get_double)
 	ret	lr
 	.org	1b + 8
 	.endr
-#ifdef CONFIG_VFPv3
+#ifdef CONFIG_VFPv3	//TRUE
 	@ d16 - d31 registers
 	.fpu	vfpv3
 	.irp	dr,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
@@ -314,7 +338,7 @@ ENTRY(vfp_put_double)
 	ret	lr
 	.org	1b + 8
 	.endr
-#ifdef CONFIG_VFPv3
+#ifdef CONFIG_VFPv3	//TRUE
 	.fpu	vfpv3
 	@ d16 - d31 registers
 	.irp	dr,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31

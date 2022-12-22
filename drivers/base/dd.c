@@ -518,7 +518,6 @@ static int call_driver_probe(struct device *dev, struct device_driver *drv)
 	int ret = 0;
 
 	if (dev->bus->probe) {
-//printk("drivers/base/dd.c:call_driver_probe CALLS dev->bus->probe: thread = %s, name = %s, bus name = %s\n", current->comm, (dev->kobj).name, dev->bus->dev_name);
 		ret = dev->bus->probe(dev);
 //printk("drivers/base/dd.c:call_driver_probe RETURNS dev->bus->probe: thread = %s, name = %s, bus name = %s\n", current->comm, (dev->kobj).name, dev->bus->dev_name);
 }
@@ -764,6 +763,9 @@ static int __driver_probe_device(struct device_driver *drv, struct device *dev)
 		ret = really_probe_debug(dev, drv);
 	else {
 //printk("drivers/base/dd.c:__drivers_probe_device CALLS really_probe\n");
+//asm volatile ("mov R0, %0	\n\t"
+//			  "SWI 1097"
+//			  :: "r" (drv->name) : "memory", "r0");
 		ret = really_probe(dev, drv);
 //printk("drivers/base/dd.c:__drivers_probe_device RETURNS FROM really_probe\n");
 }
@@ -912,6 +914,7 @@ static int __device_attach_driver(struct device_driver *drv, void *_data)
 
 	if (data->check_async && async_allowed != data->want_async)
 		return 0;
+
 //printk("drivers/base/dd.c:__device_attach_driver CALLS driver_probe_device\n");
 	/*
 	 * Ignore errors returned by ->probe so that the next driver can try

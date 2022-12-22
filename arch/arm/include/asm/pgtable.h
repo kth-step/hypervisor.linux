@@ -181,19 +181,15 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 #define pud_page(pud)		pmd_page(__pmd(pud_val(pud)))
 #define pud_write(pud)		pmd_write(__pmd(pud_val(pud)))
 
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+#define pmd_none(pmd)		(!(pmd_val(pmd) & 0x3))
+#else
 #define pmd_none(pmd)		(!pmd_val(pmd))
+#endif
 
 static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 {
-#ifdef CONFIG_TRUSTFULL_HYPERVISOR
-	unsigned long ptr;
-
-	ptr = pmd_val(pmd) & ~(PTRS_PER_PTE * sizeof(void *) - 1);
-	ptr += PTRS_PER_PTE * sizeof(void *);
-	return __va(ptr);
-#else
 	return __va(pmd_val(pmd) & PHYS_MASK & (s32)PAGE_MASK);
-#endif
 }
 
 #define pmd_page(pmd)		pfn_to_page(__phys_to_pfn(pmd_val(pmd) & PHYS_MASK))

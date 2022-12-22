@@ -371,7 +371,12 @@ static inline void __local_flush_tlb_mm(struct mm_struct *mm)
 		}
 	}
 
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	if (tlb_flag(TLB_V6_U_ASID))
+		HYPERCALL_3(HYPERCALL_CACHE_OP, INVAL_TLB_ASID, asid, 0);
+#else
 	tlb_op(TLB_V6_U_ASID, "c8, c7, 2", asid);
+#endif
 	tlb_op(TLB_V6_D_ASID, "c8, c6, 2", asid);
 	tlb_op(TLB_V6_I_ASID, "c8, c5, 2", asid);
 }
@@ -426,7 +431,12 @@ __local_flush_tlb_page(struct vm_area_struct *vma, unsigned long uaddr)
 			asm("mcr p15, 0, %0, c8, c5, 0" : : "r" (zero) : "cc");
 	}
 
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	if (tlb_flag(TLB_V6_U_PAGE))
+		HYPERCALL_3(HYPERCALL_CACHE_OP, INVAL_TLB_MVA, uaddr, 0);
+#else
 	tlb_op(TLB_V6_U_PAGE, "c8, c7, 1", uaddr);
+#endif
 	tlb_op(TLB_V6_D_PAGE, "c8, c6, 1", uaddr);
 	tlb_op(TLB_V6_I_PAGE, "c8, c5, 1", uaddr);
 }
@@ -442,6 +452,7 @@ local_flush_tlb_page(struct vm_area_struct *vma, unsigned long uaddr)
 		dsb(nshst);
 
 	__local_flush_tlb_page(vma, uaddr);
+
 	tlb_op(TLB_V7_UIS_PAGE, "c8, c7, 1", uaddr);
 
 	if (tlb_flag(TLB_BARRIER))

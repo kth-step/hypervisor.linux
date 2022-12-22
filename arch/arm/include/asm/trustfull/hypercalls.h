@@ -128,5 +128,6 @@ enum hyp_interrupt_op {
 #define HYPERCALL_LINUX_INIT_END		1042
 
 #define HYPERCALL_MAP_L2				1062
+#define HYPERCALL_UPDATE_PMD_SINGLE		1073
 
 #endif /* HYPERCALLS_H_ */

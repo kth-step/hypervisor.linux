@@ -8,7 +8,17 @@
 
 #include <asm/vfp.h>
 
-#ifdef CONFIG_AS_VFP_VMRS_FPINST
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+#define CFPSID	0
+#define CFPSCR	1
+#define CMVFR1	6
+#define CMVFR0	7
+#define CFPEXC	8
+#define CFPINST	9
+#define CFPINST2	10
+#endif
+
+#ifdef CONFIG_AS_VFP_VMRS_FPINST	//TRUE
 	.macro	VFPFMRX, rd, sysreg, cond
 	vmrs\cond	\rd, \sysreg
 	.endm
@@ -69,7 +79,15 @@
 	vstmiane \base!, {d16-d31}
 	addeq	\base, \base, #32*4		    @ step over unused register space
 #else						//TRUE
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	PUSH {r0}
+	mov r0, #CMVFR0
+	swi 1074
+	mov \tmp, r0
+	POP {r0}
+#else
 	VFPFMRX	\tmp, MVFR0			    @ Media and VFP Feature Register 0
+#endif
 	and	\tmp, \tmp, #MVFR0_A_SIMD_MASK	    @ A_SIMD field
 	cmp	\tmp, #2			    @ 32 x 64bit registers?
 	vstmiaeq \base!, {d16-d31}

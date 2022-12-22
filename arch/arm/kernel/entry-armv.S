@@ -557,9 +557,9 @@ ENDPROC(__und_svc)
 	//Handler for prefetch abort exception in supervisor mode. Handles exception
 	//or performs a kernel panic.
 __pabt_svc:
-mov r0, #0x1F
-mov r1, #0x1F
-mov r2, #0x1F
+mov r0, #0x2D
+mov r1, #0x2D
+mov r2, #0x2D
 swi 1045
 1:	b 1b
 	//Performs the following four operations in the given order:
@@ -866,11 +866,11 @@ ENDPROC(__fiq_abt)
 	.align	5
 	//Handles data abort exceptions in user mode.
 __dabt_usr:
-mov r0, #0x1E
-mov r1, #0x1E
-mov r2, #0x1E
-swi 1045
-1:	b 1b
+//mov r0, #0x1E
+//mov r1, #0x1E
+//mov r2, #0x1E
+//swi 1045
+//1:	b 1b
 	//vector_stub does the following:
 	//1.	memory[sp_<exception processor mode>] := r0
 	//		memory[sp_<exception processor mode> + 4] :=
@@ -937,11 +937,11 @@ ENDPROC(__dabt_usr)
 
 	.align	5
 __irq_usr:
-mov r0, #0x19
-mov r1, #0x19
-mov r2, #0x19
-swi 1045
-1:	b 1b
+//mov r0, #0x19
+//mov r1, #0x19
+//mov r2, #0x19
+//swi 1045
+//1:	b 1b
 	//Makes room for pt_regs on the stack, and stores in pt_regs r0-r12, lr_usr,
 	//sp_usr, memory[r0 + 4] (PC), memory[r0 + 8] (CPSR), and 0xFFFF_FFFF
 	//(orig_r0). If cr_alignment is not equal to SCTLR, then updates SCTLR to
@@ -998,11 +998,11 @@ ENDPROC(__irq_usr)
 	.align	5
 	//Emulates floating point if undefined instruction is encoded accordingly. Otherwise handles the exception.
 __und_usr:
-mov r0, #0x1C
-mov r1, #0x1C
-mov r2, #0x1C
-swi 1045
-1: b 1b
+//mov r0, #0x1C
+//mov r1, #0x1C
+//mov r2, #0x1C
+//swi 1045
+//1: b 1b
 	//Makes room for pt_regs on the stack, and stores in pt_regs r0-r12, lr_usr,
 	//sp_usr, memory[r0 + 4] (PC), memory[r0 + 8] (CPSR), and 0xFFFF_FFFF
 	//(orig_r0). If cr_alignment is not equal to SCTLR, then updates SCTLR to
@@ -1042,7 +1042,9 @@ swi 1045
 	//Sets DACR such that user addresses are not accessible, and all other
 	//addresses accessible as specified by the page tables. ip register = r12 is
 	//used as a temporary register.
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 	uaccess_disable ip
+#endif
 
 	@ r0 = 32-bit ARM instruction which caused the exception
 	@ r2 = PC value for the following instruction (:= regs->ARM_pc)

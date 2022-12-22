@@ -709,15 +709,23 @@ static struct attribute_group armv7_pmuv2_events_attr_group = {
 static inline u32 armv7_pmnc_read(void)
 {
 	u32 val;
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	HYPERCALL_1(1069, &val);
+#else
 	asm volatile("mrc p15, 0, %0, c9, c12, 0" : "=r"(val));
+#endif
 	return val;
 }
 
 static inline void armv7_pmnc_write(u32 val)
 {
 	val &= ARMV7_PMNC_MASK;
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	HYPERCALL_1(1072, val);
+#else
 	isb();
 	asm volatile("mcr p15, 0, %0, c9, c12, 0" : : "r"(val));
+#endif
 }
 
 static inline int armv7_pmnc_has_overflowed(u32 pmnc)
@@ -796,7 +804,11 @@ static inline void armv7_pmnc_enable_counter(int idx)
 static inline void armv7_pmnc_disable_counter(int idx)
 {
 	u32 counter = ARMV7_IDX_TO_COUNTER(idx);
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	HYPERCALL_1(1070, BIT(counter));
+#else
 	asm volatile("mcr p15, 0, %0, c9, c12, 2" : : "r" (BIT(counter)));
+#endif
 }
 
 static inline void armv7_pmnc_enable_intens(int idx)
@@ -808,11 +820,15 @@ static inline void armv7_pmnc_enable_intens(int idx)
 static inline void armv7_pmnc_disable_intens(int idx)
 {
 	u32 counter = ARMV7_IDX_TO_COUNTER(idx);
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	HYPERCALL_1(1071, BIT(counter));
+#else
 	asm volatile("mcr p15, 0, %0, c9, c14, 2" : : "r" (BIT(counter)));
 	isb();
 	/* Clear the overflow flag in case an interrupt is pending. */
 	asm volatile("mcr p15, 0, %0, c9, c12, 3" : : "r" (BIT(counter)));
 	isb();
+#endif
 }
 
 static inline u32 armv7_pmnc_getreset_flags(void)

@@ -229,7 +229,9 @@ static void free_pte_range(struct mmu_gather *tlb, pmd_t *pmd,
 	pgtable_t token = pmd_pgtable(*pmd);
 	pmd_clear(pmd);
 	pte_free_tlb(tlb, token, addr);
+printk("mm/memory.c:free_pte_range1\n");
 	mm_dec_nr_ptes(tlb->mm);
+printk("mm/memory.c:free_pte_range2\n");
 }
 
 static inline void free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
@@ -241,13 +243,18 @@ static inline void free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
 	unsigned long start;
 
 	start = addr;
+printk("mm/memory.c:free_pmd_range1: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 	pmd = pmd_offset(pud, addr);
 	do {
 		next = pmd_addr_end(addr, end);
+printk("mm/memory.c:free_pmd_range2: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX, pmd = 0x%p, pmd0 = 0x%X, pmd1 = 0x%X, pmd_none_or_clear_bad(pmd) = 0x%x, pmd_none(*pmd) = 0x%x, !(pmd_val(*pmd) & 0x3) = 0x%x\n", tlb->mm, start, end, addr, pmd, pmd_val(pmd)[0], pmd_val(pmd)[1], pmd_none_or_clear_bad(pmd), pmd_none(*pmd), !(pmd_val(*pmd) & 0x3));
 		if (pmd_none_or_clear_bad(pmd))
 			continue;
+printk("mm/memory.c:free_pmd_range3: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 		free_pte_range(tlb, pmd, addr);
+printk("mm/memory.c:free_pmd_range4: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 	} while (pmd++, addr = next, addr != end);
+printk("mm/memory.c:free_pmd_range5: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 
 	start &= PUD_MASK;
 	if (start < floor)
@@ -401,9 +408,12 @@ void free_pgd_range(struct mmu_gather *tlb,
 void free_pgtables(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		unsigned long floor, unsigned long ceiling)
 {
+	printk("mm/memory.c:free_pgtables0: mm = 0x%p, &mm->pgtables_bytes = 0x%d\n", tlb->mm, (tlb->mm->pgtables_bytes).counter);
+
 	while (vma) {
 		struct vm_area_struct *next = vma->vm_next;
 		unsigned long addr = vma->vm_start;
+		printk("mm/memory.c:free_pgtables1: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 
 		/*
 		 * Hide vma from rmap and truncate_pagecache before freeing
@@ -413,21 +423,27 @@ void free_pgtables(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		unlink_file_vma(vma);
 
 		if (is_vm_hugetlb_page(vma)) {
+			printk("mm/memory.c:free_pgtables2: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 			hugetlb_free_pgd_range(tlb, addr, vma->vm_end,
 				floor, next ? next->vm_start : ceiling);
 		} else {
+			printk("mm/memory.c:free_pgtables3: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 			/*
 			 * Optimization: gather nearby vmas into one call down
 			 */
 			while (next && next->vm_start <= vma->vm_end + PMD_SIZE
 			       && !is_vm_hugetlb_page(next)) {
+				printk("mm/memory.c:free_pgtables4: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 				vma = next;
 				next = vma->vm_next;
 				unlink_anon_vmas(vma);
 				unlink_file_vma(vma);
 			}
+			printk("mm/memory.c:free_pgtables5: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
+			printk("mm/memory.c:free_pgtables6: mm = 0x%p, addr = 0x%lX, vm_end = 0x%lX\n", tlb->mm, addr, vma->vm_end);
 			free_pgd_range(tlb, addr, vma->vm_end,
 				floor, next ? next->vm_start : ceiling);
+			printk("mm/memory.c:free_pgtables7: mm = 0x%p, addr = 0x%lX, vm_end = 0x%lX\n", tlb->mm, addr, vma->vm_end);
 		}
 		vma = next;
 	}
@@ -457,7 +473,9 @@ int __pte_alloc(struct mm_struct *mm, pmd_t *pmd)
 
 	ptl = pmd_lock(mm, pmd);
 	if (likely(pmd_none(*pmd))) {	/* Has another populated it ? */
+printk("mm/memory.c:__pte_alloc1\n");
 		mm_inc_nr_ptes(mm);
+printk("mm/memory.c:__pte_alloc2\n");
 		pmd_populate(mm, pmd, new);
 		new = NULL;
 	}
@@ -4045,7 +4063,9 @@ vm_fault_t finish_fault(struct vm_fault *vmf)
 		if (vmf->prealloc_pte) {
 			vmf->ptl = pmd_lock(vma->vm_mm, vmf->pmd);
 			if (likely(pmd_none(*vmf->pmd))) {
+//printk("mm/memory.c:finish_fault1\n");
 				mm_inc_nr_ptes(vma->vm_mm);
+//printk("mm/memory.c:finish_fault2\n");
 				pmd_populate(vma->vm_mm, vmf->pmd, vmf->prealloc_pte);
 				vmf->prealloc_pte = NULL;
 			}

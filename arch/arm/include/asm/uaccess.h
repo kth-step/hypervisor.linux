@@ -567,29 +567,9 @@ __clear_user_std(void __user *addr, unsigned long n);
 static inline unsigned long __must_check
 __clear_user(void __user *addr, unsigned long n)
 {
-		asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xABCDABCD), "r" (0xABCDABCD), "r" (0xABCDABC0) : "memory", "r0", "r1", "r2");
 	unsigned int __ua_flags = uaccess_save_and_enable();
-		asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xABCDABCD), "r" (0xABCDABCD), "r" (0xABCDABC1) : "memory", "r0", "r1", "r2");
 	n = arm_clear_user(addr, n);
-		asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xABCDABCD), "r" (0xABCDABCD), "r" (0xABCDABC2) : "memory", "r0", "r1", "r2");
 	uaccess_restore(__ua_flags);
-		asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xABCDABCD), "r" (0xABCDABCD), "r" (0xABCDABC3) : "memory", "r0", "r1", "r2");
 	return n;
 }
 
@@ -614,11 +594,6 @@ raw_copy_to_user(void __user *to, const void *from, unsigned long n)
 static inline unsigned long __must_check clear_user(void __user *to, unsigned long n)
 {
 	if (access_ok(to, n)) {
-		asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xABCDABCD), "r" (0xABCDABCD), "r" (0xABCDABCD) : "memory", "r0", "r1", "r2");
 		n = __clear_user(to, n);
 	}
 	return n;

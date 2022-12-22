@@ -284,22 +284,22 @@ static struct mem_type mem_types[] __ro_after_init = {
 	[MT_MEMORY_RWX] = {
 		.prot_pte  = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY,
 		.prot_l1   = PMD_TYPE_TABLE,
-#ifdef CONFIG_TRUSTFULL_HYPERVISOR
-		.prot_sect = PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AP_READ,
-#else
+//#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+//		.prot_sect = PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AP_READ,
+//#else
 		.prot_sect = PMD_TYPE_SECT | PMD_SECT_AP_WRITE,
-#endif
+//#endif
 		.domain    = DOMAIN_KERNEL,
 	},
 	[MT_MEMORY_RW] = {
 		.prot_pte  = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY |
 			     L_PTE_XN,
 		.prot_l1   = PMD_TYPE_TABLE,
-#ifdef CONFIG_TRUSTFULL_HYPERVISOR
-		.prot_sect = PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AP_READ,
-#else
+//#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+//		.prot_sect = PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AP_READ,
+//#else
 		.prot_sect = PMD_TYPE_SECT | PMD_SECT_AP_WRITE,
-#endif
+//#endif
 		.domain    = DOMAIN_KERNEL,
 	},
 	[MT_ROM] = {
@@ -696,7 +696,6 @@ EXPORT_SYMBOL(phys_mem_access_prot);
 static void __init *early_alloc(unsigned long sz)
 {
 	void *ptr = memblock_alloc(sz, sz);
-
 	if (!ptr)
 		panic("%s: Failed to allocate %lu bytes align=0x%lx\n",
 		      __func__, sz, sz);
@@ -721,8 +720,10 @@ static pte_t * __init arm_pte_alloc(pmd_t *pmd, unsigned long addr,
 		pte_t *pte = alloc(PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE);
 		__pmd_populate(pmd, __pa(pte), prot);
 	}
+
 	BUG_ON(pmd_bad(*pmd));
-	return pte_offset_kernel(pmd, addr);
+	pte_t *pte = pte_offset_kernel(pmd, addr);	//include/linux/pgtable.h
+	return pte;
 }
 
 static pte_t * __init early_pte_alloc(pmd_t *pmd, unsigned long addr,
@@ -737,6 +738,22 @@ static void __init alloc_init_pte(pmd_t *pmd, unsigned long addr,
 				  void *(*alloc)(unsigned long sz),
 				  bool ng)
 {
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	if (!ng) {
+		if (addr >= 0xC0000000 && addr < 0xC7000000)
+			HYPERCALL_3(1077, addr, end, pfn_pte(pfn, __pgprot(type->prot_pte)))
+		else {
+			pte_t *pte = arm_pte_alloc(pmd, addr, type->prot_l1, alloc);
+
+			do {
+				set_pte_ext(pte, pfn_pte(pfn, __pgprot(type->prot_pte)),
+						ng ? PTE_EXT_NG : 0);
+				pfn++;
+			} while (pte++, addr += PAGE_SIZE, addr != end);
+		}
+	} else
+		HYPERCALL_3(1078, addr, end, pfn_pte(pfn, __pgprot(type->prot_pte)))
+#else
 	pte_t *pte = arm_pte_alloc(pmd, addr, type->prot_l1, alloc);
 
 	do {
@@ -744,6 +761,7 @@ static void __init alloc_init_pte(pmd_t *pmd, unsigned long addr,
 			    ng ? PTE_EXT_NG : 0);
 		pfn++;
 	} while (pte++, addr += PAGE_SIZE, addr != end);
+#endif
 }
 
 static void __init __map_init_section(pmd_t *pmd, unsigned long addr,
@@ -785,7 +803,6 @@ static void __init alloc_init_pmd(pud_t *pud, unsigned long addr,
 {
 	pmd_t *pmd = pmd_offset(pud, addr);
 	unsigned long next;
-
 	do {
 		/*
 		 * With LPAE, we must loop over to map
@@ -797,13 +814,17 @@ static void __init alloc_init_pmd(pud_t *pud, unsigned long addr,
 		 * Try a section mapping - addr, next and phys must all be
 		 * aligned to a section boundary.
 		 */
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 		if (type->prot_sect &&
 				((addr | next | phys) & ~SECTION_MASK) == 0) {
 			__map_init_section(pmd, addr, next, phys, type, ng);
 		} else {
+#endif
 			alloc_init_pte(pmd, addr, next,
 				       __phys_to_pfn(phys), type, alloc, ng);
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 		}
+#endif
 
 		phys += next - addr;
 
@@ -1007,14 +1028,36 @@ void __init iotable_init(struct map_desc *io_desc, int nr)
 
 	for (md = io_desc; nr; md++, nr--) {
 #ifdef CONFIG_TRUSTFULL_HYPERVISOR
-		if (md->pfn == 0x00048000 || md->pfn == 0x00044C00) {	//Maps IO.
+		#define L4_34XX_PHYS		0x48000000
+		#define L4_WK_AM33XX_PHYS	0x44C00000
+		#define CPSW_SS_PHYS		0x4A100000
+		#define PRU_ICSS_PHYS		0x4A300000
+		#define TPCC_PHYS			0x49000000
+		#define TPTC0_PHYS			0x49800000
+		#define TPTC1_PHYS			0x49900000
+		#define TPTC2_PHYS			0x49A00000
+		#define MMCHS2_PHYS			0x47810000
+		#define USBSS_PHYS			0x47400000
+		#define L3OCMC0_PHYS		0x40300000
+		#define EMIF0_PHYS			0x4C000000
+		#define GPMC_PHYS			0x50000000
+		#define SHAM_PHYS			0x53100000
+		#define AES_PHYS			0x53500000
+		#define SGX530_PHYS			0x56000000
+		if ((md->pfn << 12) == L4_34XX_PHYS || (md->pfn << 12) == L4_WK_AM33XX_PHYS || (md->pfn << 12) == CPSW_SS_PHYS ||
+			(md->pfn << 12) == PRU_ICSS_PHYS || (md->pfn << 12) == TPCC_PHYS || (md->pfn << 12) == TPTC0_PHYS ||
+			(md->pfn << 12) == TPTC1_PHYS || (md->pfn << 12) == TPTC2_PHYS || (md->pfn << 12) == MMCHS2_PHYS ||
+			(md->pfn << 12) == USBSS_PHYS || (md->pfn << 12) == L3OCMC0_PHYS || (md->pfn << 12) == EMIF0_PHYS ||
+			(md->pfn << 12) == GPMC_PHYS || (md->pfn << 12) == SHAM_PHYS || (md->pfn << 12) == AES_PHYS ||
+			(md->pfn << 12) == SGX530_PHYS) {	//Maps IO.
 			unsigned long start_va = md->virtual;
 			unsigned long start_pa = md->pfn << 12;
 			unsigned long end_pa = start_pa + md->length;
 			HYPERCALL_3(1056, start_va, start_pa, end_pa)
-		}
+		} else
+			create_mapping(md);
 #else
-		create_mapping(md);	//Already mapped.
+		create_mapping(md);
 #endif
 
 		vm = &svm->vm;
@@ -1403,6 +1446,7 @@ static void __init devicemaps_init(const struct machine_desc *mdesc)
 		pmd_clear(pmd_off_k(addr));
 #endif
 
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR	//Already mapped during boot in arch/arm/kernel/head.S.
 	if (__atags_pointer) {
 		/* create a read-only mapping of the device tree */
 		map.pfn = __phys_to_pfn(__atags_pointer & SECTION_MASK);
@@ -1411,6 +1455,7 @@ static void __init devicemaps_init(const struct machine_desc *mdesc)
 		map.type = MT_ROM;
 		create_mapping(&map);
 	}
+#endif
 
 	/*
 	 * Map the kernel if it is XIP.
@@ -1522,7 +1567,6 @@ static void __init kmap_init(void)
 	pkmap_page_table = early_pte_alloc(pmd_off_k(PKMAP_BASE),
 		PKMAP_BASE, _PAGE_KERNEL_TABLE);
 #endif
-
 	early_pte_alloc(pmd_off_k(FIXADDR_START), FIXADDR_START,
 			_PAGE_KERNEL_TABLE);
 }
@@ -1785,7 +1829,6 @@ static void __init early_fixmap_shutdown(void)
 		map.pfn = pte_pfn(*pte);
 		map.type = MT_DEVICE;
 		map.length = PAGE_SIZE;
-
 		create_mapping(&map);
 	}
 }
@@ -1800,7 +1843,6 @@ void __init paging_init(const struct machine_desc *mdesc)
 
 	pr_debug("physical kernel sections: 0x%08llx-0x%08llx\n",
 		 kernel_sec_start, kernel_sec_end);
-
 	prepare_page_table();
 	map_lowmem();
 	memblock_set_current_limit(arm_lowmem_limit);
@@ -1844,11 +1886,6 @@ void set_pte_at(struct mm_struct *mm, unsigned long addr,
 			__sync_icache_dcache(pteval);
 		ext |= PTE_EXT_NG;
 	}
-if (ptep == 0xC1DE37FC)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xAAAAAAAA), "r" (addr), "r" (0xAAAAAAA2) : "memory", "r0", "r1", "r2");
+
 	set_pte_ext(ptep, pteval, ext);
 }

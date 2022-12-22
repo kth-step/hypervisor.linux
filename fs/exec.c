@@ -692,12 +692,14 @@ static int shift_arg_pages(struct vm_area_struct *vma, unsigned long shift)
 	 * ensure there are no vmas between where we want to go
 	 * and where we are
 	 */
+printk("fs/exec.c:shift_arg_pages1\n");
 	if (vma != find_vma(mm, new_start))
 		return -EFAULT;
 
 	/*
 	 * cover the whole range: [new_start, old_end)
 	 */
+printk("fs/exec.c:shift_arg_pages2\n");
 	if (vma_adjust(vma, new_start, old_end, vma->vm_pgoff, NULL))
 		return -ENOMEM;
 
@@ -705,18 +707,24 @@ static int shift_arg_pages(struct vm_area_struct *vma, unsigned long shift)
 	 * move the page tables downwards, on failure we rely on
 	 * process cleanup to remove whatever mess we made.
 	 */
+printk("fs/exec.c:shift_arg_pages3\n");
 	if (length != move_page_tables(vma, old_start,
 				       vma, new_start, length, false))
 		return -ENOMEM;
 
+printk("fs/exec.c:shift_arg_pages4\n");
 	lru_add_drain();
+printk("fs/exec.c:shift_arg_pages5\n");
 	tlb_gather_mmu(&tlb, mm);
+printk("fs/exec.c:shift_arg_pages6\n");
 	if (new_end > old_start) {
 		/*
 		 * when the old and new regions overlap clear from new_end.
 		 */
+printk("fs/exec.c:shift_arg_pages7\n");
 		free_pgd_range(&tlb, new_end, old_end, new_end,
 			vma->vm_next ? vma->vm_next->vm_start : USER_PGTABLES_CEILING);
+printk("fs/exec.c:shift_arg_pages8\n");
 	} else {
 		/*
 		 * otherwise, clean from old_start; this is done to not touch
@@ -724,15 +732,21 @@ static int shift_arg_pages(struct vm_area_struct *vma, unsigned long shift)
 		 * have constraints on va-space that make this illegal (IA64) -
 		 * for the others its just a little faster.
 		 */
+printk("fs/exec.c:shift_arg_pages9\n");
 		free_pgd_range(&tlb, old_start, old_end, new_end,
 			vma->vm_next ? vma->vm_next->vm_start : USER_PGTABLES_CEILING);
+printk("fs/exec.c:shift_arg_pages10\n");
 	}
+printk("fs/exec.c:shift_arg_pages11\n");
 	tlb_finish_mmu(&tlb);
+printk("fs/exec.c:shift_arg_pages12\n");
 
 	/*
 	 * Shrink the vma to just the new range.  Always succeeds.
 	 */
+printk("fs/exec.c:shift_arg_pages13\n");
 	vma_adjust(vma, new_start, new_end, vma->vm_pgoff, NULL);
+printk("fs/exec.c:shift_arg_pages14\n");
 
 	return 0;
 }
@@ -809,8 +823,10 @@ int setup_arg_pages(struct linux_binprm *bprm,
 	vm_flags |= mm->def_flags;
 	vm_flags |= VM_STACK_INCOMPLETE_SETUP;
 
+printk("fs/exec.c:setup_arg_pages1\n");
 	ret = mprotect_fixup(vma, &prev, vma->vm_start, vma->vm_end,
 			vm_flags);
+printk("fs/exec.c:setup_arg_pages2\n");
 	if (ret)
 		goto out_unlock;
 	BUG_ON(prev != vma);
@@ -822,7 +838,9 @@ int setup_arg_pages(struct linux_binprm *bprm,
 
 	/* Move stack pages down in memory. */
 	if (stack_shift) {
+printk("fs/exec.c:setup_arg_pages3\n");
 		ret = shift_arg_pages(vma, stack_shift);
+printk("fs/exec.c:setup_arg_pages4\n");
 		if (ret)
 			goto out_unlock;
 	}
@@ -849,7 +867,9 @@ int setup_arg_pages(struct linux_binprm *bprm,
 		stack_base = vma->vm_start - stack_expand;
 #endif
 	current->mm->start_stack = bprm->p;
+printk("fs/exec.c:setup_arg_pages5\n");
 	ret = expand_stack(vma, stack_base);
+printk("fs/exec.c:setup_arg_pages6\n");
 	if (ret)
 		ret = -EFAULT;
 
@@ -1019,7 +1039,9 @@ static int exec_mmap(struct mm_struct *mm)
 	 */
 	if (!IS_ENABLED(CONFIG_ARCH_WANT_IRQS_OFF_ACTIVATE_MM))
 		local_irq_enable();
+
 	activate_mm(active_mm, mm);
+
 	if (IS_ENABLED(CONFIG_ARCH_WANT_IRQS_OFF_ACTIVATE_MM))
 		local_irq_enable();
 	tsk->mm->vmacache_seqnum = 0;

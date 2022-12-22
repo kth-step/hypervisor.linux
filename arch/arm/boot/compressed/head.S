@@ -1456,12 +1456,6 @@ __armv4_mmu_cache_flush:
 		movne	pc, lr
 		mov	r2, #64*1024		@ default: 32K dcache size (*2)
 		mov	r11, #32		@ default: 32 byte line size
-mov r0, #0
-mov r1, #1
-mov r2, #2
-swi 1045
-label:
-b label
 		mrc	p15, 0, r3, c0, c0, 1	@ read cache type
 		teq	r3, r9			@ cache ID register present?
 		beq	no_cache_id

@@ -1051,7 +1051,6 @@ static void init_sched(struct cppi41_dd *cdd)
 	//Processes all 30 TX and 30 RX channels/endpoints (2 USBs, each with 15 TX
 	//and 15 RX endpoints), two at a time.
 	for (ch = 0; ch < cdd->n_chans; ch += 2) {
-
 		reg = SCHED_ENTRY0_CHAN(ch);						//Channel/Endpoint index in bits 4-0, and "sets" TX flag in bit 7.
 		reg |= SCHED_ENTRY1_CHAN(ch) | SCHED_ENTRY1_IS_RX;	//Channel/Endpoint index in bits 12-8, and sets RX flag set in bit 15.
 //printk("drivers/dma/ti/cppi41.c:init_sched: %d\n", ch);

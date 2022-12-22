@@ -645,7 +645,9 @@ static inline int mm_alloc_pgd(struct mm_struct *mm)
 
 static inline void mm_free_pgd(struct mm_struct *mm)
 {
+printk("kernel/fork.c:mm_free_pgd1: mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	pgd_free(mm, mm->pgd);
+printk("kernel/fork.c:mm_free_pgd2: mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 #else
 static int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
@@ -674,9 +676,12 @@ static void check_mm(struct mm_struct *mm)
 				 mm, resident_page_types[i], x);
 	}
 
-	if (mm_pgtables_bytes(mm))
+printk("kernel/fork.c:check_mm: mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
+	if (mm_pgtables_bytes(mm)) {
 		pr_alert("BUG: non-zero pgtables_bytes on freeing mm: %ld\n",
 				mm_pgtables_bytes(mm));
+while (1);
+}
 
 #if defined(CONFIG_TRANSPARENT_HUGEPAGE) && !USE_SPLIT_PMD_PTLOCKS
 	VM_BUG_ON_MM(mm->pmd_huge_pte, mm);
@@ -696,7 +701,9 @@ void __mmdrop(struct mm_struct *mm)
 	BUG_ON(mm == &init_mm);
 	WARN_ON_ONCE(mm == current->mm);
 	WARN_ON_ONCE(mm == current->active_mm);
+printk("kernel/fork.c:__mmdrop1: mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	mm_free_pgd(mm);
+printk("kernel/fork.c:__mmdrop2: mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	destroy_context(mm);
 	mmu_notifier_subscriptions_destroy(mm);
 	check_mm(mm);

@@ -155,25 +155,33 @@ void pgd_free(struct mm_struct *mm, pgd_t *pgd_base)
 		return;
 
 	pgd = pgd_base + pgd_index(0);
+printk("arch/arm/mm/pgd.c:pgd_free: mm = 0x%p, pgd = 0x%p, *pgd = 0x%x\n", mm, pgd, (uint32_t) *pgd);
 	if (pgd_none_or_clear_bad(pgd))
 		goto no_pgd;
 
 	p4d = p4d_offset(pgd, 0);
+printk("arch/arm/mm/pgd.c:pgd_free: mm = 0x%p, p4d = 0x%x, *p4d = 0x%x\n", mm, p4d, *((uint32_t *) p4d));
 	if (p4d_none_or_clear_bad(p4d))
 		goto no_p4d;
 
 	pud = pud_offset(p4d, 0);
+printk("arch/arm/mm/pgd.c:pgd_free: mm = 0x%p, pud = 0x%x, *pud = 0x%x\n", mm, pud, *((uint32_t *) pud));
 	if (pud_none_or_clear_bad(pud))
 		goto no_pud;
 
 	pmd = pmd_offset(pud, 0);
+printk("arch/arm/mm/pgd.c:pgd_free: mm = 0x%p, pmd = 0x%x, *pmd = 0x%x\n", mm, pmd, (uint32_t) *pmd);
 	if (pmd_none_or_clear_bad(pmd))
 		goto no_pmd;
 
 	pte = pmd_pgtable(*pmd);
 	pmd_clear(pmd);
+printk("arch/arm/mm/pgd.c:pgd_free1: mm = 0x%p, pte_free, pte = 0x%x, *pte = 0x%x\n", mm, pte, *pte);
 	pte_free(mm, pte);
+printk("arch/arm/mm/pgd.c:pgd_free2: mm = 0x%p, pte_free\n", mm);
+printk("arch/arm/mm/pgd.c:pgd_free3: mm = 0x%p, pgd_base = 0x%p\n", mm, pgd_base);
 	mm_dec_nr_ptes(mm);
+printk("arch/arm/mm/pgd.c:pgd_free4: mm = 0x%p\n", mm);
 no_pmd:
 	pud_clear(pud);
 	pmd_free(mm, pmd);

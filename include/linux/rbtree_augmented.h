@@ -47,11 +47,6 @@ static inline void
 rb_insert_augmented(struct rb_node *node, struct rb_root *root,
 		    const struct rb_augment_callbacks *augment)
 {
-//asm volatile ("mov R0, %0	\n\t"
-//			  "mov R1, %1	\n\t"
-//			  "mov R2, %2	\n\t"
-//			  "SWI 1045"
-//			  :: "r" (0xBECEDEEE), "r" (root), "r" (node) : "memory", "r0", "r1", "r2");
 	__rb_insert_augmented(node, root, augment->rotate);
 }
 
@@ -161,24 +156,12 @@ RB_DECLARE_CALLBACKS(RBSTATIC, RBNAME,					      \
 
 static inline void rb_set_parent(struct rb_node *rb, struct rb_node *p)
 {
-if (((unsigned long) rb) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0002), "r" (0xDEDE0002), "r" (rb) : "memory", "r0", "r1", "r2");
 	rb->__rb_parent_color = rb_color(rb) | (unsigned long)p;
 }
 
 static inline void rb_set_parent_color(struct rb_node *rb,
 				       struct rb_node *p, int color)
 {
-if (((unsigned long) rb) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0003), "r" ((unsigned long)p | color), "r" (rb) : "memory", "r0", "r1", "r2");
 	rb->__rb_parent_color = (unsigned long)p | color;
 }
 
@@ -232,12 +215,6 @@ __rb_erase_augmented(struct rb_node *node, struct rb_root *root,
 		parent = __rb_parent(pc);
 		__rb_change_child(node, child, parent, root);
 		if (child) {
-if (((unsigned long) child) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0004), "r" (0xDEDE0004), "r" (child) : "memory", "r0", "r1", "r2");
 			child->__rb_parent_color = pc;
 			rebalance = NULL;
 		} else
@@ -245,12 +222,6 @@ asm volatile ("mov R0, %0	\n\t"
 		tmp = parent;
 	} else if (!child) {
 		/* Still case 1, but this time the child is node->rb_left */
-if (((unsigned long) tmp) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0005), "r" (0xDEDE0005), "r" (tmp) : "memory", "r0", "r1", "r2");
 		tmp->__rb_parent_color = pc = node->__rb_parent_color;
 		parent = __rb_parent(pc);
 		__rb_change_child(node, tmp, parent, root);
@@ -312,23 +283,12 @@ asm volatile ("mov R0, %0	\n\t"
 		__rb_change_child(node, successor, tmp, root);
 
 		if (child2) {
-if (((unsigned long) child2) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0006), "r" (parent), "r" (child2) : "memory", "r0", "r1", "r2");
 			rb_set_parent_color(child2, parent, RB_BLACK);
 			rebalance = NULL;
 		} else {
 			rebalance = rb_is_black(successor) ? parent : NULL;
 		}
-if (((unsigned long) successor) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0006), "r" (0xDEDE0006), "r" (successor) : "memory", "r0", "r1", "r2");
+
 		successor->__rb_parent_color = pc;
 		tmp = successor;
 	}

@@ -55,11 +55,12 @@ static void idmap_add_pmd(pud_t *pud, unsigned long addr, unsigned long end,
 static void idmap_add_pmd(pud_t *pud, unsigned long addr, unsigned long end,
 	unsigned long prot)
 {
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+//	HYPERCALL_2(HYPERCALL_SET_PMD, pmd, addr);
+	HYPERCALL_3(1056, addr, addr, addr + SECTION_SIZE);
+#else
 	pmd_t *pmd = pmd_offset(pud, addr);
 	addr = (addr & PMD_MASK) | prot;
-#ifdef CONFIG_TRUSTFULL_HYPERVISOR
-	HYPERCALL_2(HYPERCALL_SET_PMD, pmd, addr);
-#else
 	pmd[0] = __pmd(addr);
 	addr += SECTION_SIZE;
 	pmd[1] = __pmd(addr);

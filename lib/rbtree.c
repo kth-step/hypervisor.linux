@@ -58,24 +58,11 @@
 
 static inline void rb_set_black(struct rb_node *rb)
 {
-if (((unsigned long) rb) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0000), "r" (0xDEDE0000), "r" (rb) : "memory", "r0", "r1", "r2");
-
 	rb->__rb_parent_color |= RB_BLACK;
 }
 
 static inline struct rb_node *rb_red_parent(struct rb_node *red)
 {
-if (((unsigned long) red) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0001), "r" (0xDEDE0001), "r" (red) : "memory", "r0", "r1", "r2");
 	return (struct rb_node *)red->__rb_parent_color;
 }
 
@@ -89,12 +76,6 @@ __rb_rotate_set_parents(struct rb_node *old, struct rb_node *new,
 			struct rb_root *root, int color)
 {
 	struct rb_node *parent = rb_parent(old);
-if (((unsigned long) new) == 0xC1DE2010)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xDEDE0007), "r" (0xDEDE0007), "r" (new) : "memory", "r0", "r1", "r2");
 	new->__rb_parent_color = old->__rb_parent_color;
 	rb_set_parent_color(old, new, color);
 	__rb_change_child(old, new, parent, root);
@@ -104,22 +85,9 @@ static __always_inline void
 __rb_insert(struct rb_node *node, struct rb_root *root,
 	    void (*augment_rotate)(struct rb_node *old, struct rb_node *new))
 {
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00000) : "memory", "r0", "r1", "r2");
-
 	struct rb_node *parent = rb_red_parent(node), *gparent, *tmp;
 
 	while (true) {
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00001) : "memory", "r0", "r1", "r2");
 		/*
 		 * Loop invariant: node is red.
 		 */
@@ -132,12 +100,7 @@ asm volatile ("mov R0, %0	\n\t"
 			rb_set_parent_color(node, NULL, RB_BLACK);
 			break;
 		}
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00002) : "memory", "r0", "r1", "r2");
+
 		/*
 		 * If there is a black parent, we are done.
 		 * Otherwise, take some corrective action as,
@@ -146,34 +109,10 @@ asm volatile ("mov R0, %0	\n\t"
 		 */
 		if(rb_is_black(parent))
 			break;
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00003) : "memory", "r0", "r1", "r2");
+
 		gparent = rb_red_parent(parent);
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (parent), "r" (gparent), "r" (0xBEB00004) : "memory", "r0", "r1", "r2");
-//HÄR! gparent är null!
 		tmp = gparent->rb_right;
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEBBBBBB) : "memory", "r0", "r1", "r2");
 		if (parent != tmp) {	/* parent == gparent->rb_left */
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00005) : "memory", "r0", "r1", "r2");
 			if (tmp && rb_is_red(tmp)) {
 				/*
 				 * Case 1 - node's uncle is red (color flips).
@@ -188,58 +127,16 @@ asm volatile ("mov R0, %0	\n\t"
 				 * 4) does not allow this, we need to recurse
 				 * at g.
 				 */
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00006) : "memory", "r0", "r1", "r2");
 				rb_set_parent_color(tmp, gparent, RB_BLACK);
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00007) : "memory", "r0", "r1", "r2");
 				rb_set_parent_color(parent, gparent, RB_BLACK);
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00008) : "memory", "r0", "r1", "r2");
 				node = gparent;
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB00009) : "memory", "r0", "r1", "r2");
 				parent = rb_parent(node);
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB0000A) : "memory", "r0", "r1", "r2");
 				rb_set_parent_color(node, parent, RB_RED);
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB0000B) : "memory", "r0", "r1", "r2");
 				continue;
 			}
 
 			tmp = parent->rb_right;
 			if (node == tmp) {
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB0000C) : "memory", "r0", "r1", "r2");
 				/*
 				 * Case 2 - node's uncle is black and node is
 				 * the parent's right child (left rotate at parent).
@@ -263,12 +160,6 @@ asm volatile ("mov R0, %0	\n\t"
 				augment_rotate(parent, node);
 				parent = node;
 				tmp = node->rb_right;
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB0000D) : "memory", "r0", "r1", "r2");
 			}
 
 			/*
@@ -287,20 +178,8 @@ asm volatile ("mov R0, %0	\n\t"
 				rb_set_parent_color(tmp, gparent, RB_BLACK);
 			__rb_rotate_set_parents(gparent, parent, root, RB_RED);
 			augment_rotate(gparent, parent);
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB0000E) : "memory", "r0", "r1", "r2");
 			break;
 		} else {
-if (node == 0xC1DE2070)
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBEB00000), "r" (0xBEB00000), "r" (0xBEB0000F) : "memory", "r0", "r1", "r2");
 			tmp = gparent->rb_left;
 			if (tmp && rb_is_red(tmp)) {
 				/* Case 1 - color flips */
@@ -576,11 +455,6 @@ EXPORT_SYMBOL(rb_erase);
 void __rb_insert_augmented(struct rb_node *node, struct rb_root *root,
 	void (*augment_rotate)(struct rb_node *old, struct rb_node *new))
 {
-/*asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xBBBBBBB0), "r" (root), "r" (node) : "memory", "r0", "r1", "r2");*/
 	__rb_insert(node, root, augment_rotate);
 }
 EXPORT_SYMBOL(__rb_insert_augmented);
