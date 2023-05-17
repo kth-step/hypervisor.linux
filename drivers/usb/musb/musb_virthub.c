@@ -18,9 +18,6 @@
 
 #include "musb_core.h"
 
-//Clears resume bit of POWER register, which should be done after 20ms of being
-//set. Updates the port status and PHY OTG state, and notifies kernel of resume
-//event.
 void musb_host_finish_resume(struct work_struct *work)
 {
 	struct musb *musb;
@@ -44,43 +41,42 @@ void musb_host_finish_resume(struct work_struct *work)
 	musb->is_active = 1;
 	musb->port1_status &= ~(USB_PORT_STAT_SUSPEND | MUSB_PORT_STAT_RESUME);
 	musb->port1_status |= USB_PORT_STAT_C_SUSPEND << 16;
-	usb_hcd_poll_rh_status(musb->hcd);						//Kernel is notified of resume event.
+	usb_hcd_poll_rh_status(musb->hcd);
 	/* NOTE: it might really be A_WAIT_BCON ... */
 	musb->xceiv->otg->state = OTG_STATE_A_HOST;
 
 	spin_unlock_irqrestore(&musb->lock, flags);
 }
 
-//Suspends or wakes up device depending on @do_suspend argument.
 int musb_port_suspend(struct musb *musb, bool do_suspend)
 {
 	struct usb_otg	*otg = musb->xceiv->otg;
 	u8		power;
 	void __iomem	*mbase = musb->mregs;
 
-	if (!is_host_active(musb))						//Not in host mode.
+	if (!is_host_active(musb))
 		return 0;
-													//Host mode.
+
 	/* NOTE:  this doesn't necessarily put PHY into low power mode,
 	 * turning off its clock; that's a function of PHY integration and
 	 * MUSB_POWER_ENSUSPEND.  PHY may need a clock (sigh) to detect
 	 * SE0 changing to connect (J) or wakeup (K) states.
 	 */
 	power = musb_readb(mbase, MUSB_POWER);
-	if (do_suspend) {								//Suspend.
+	if (do_suspend) {
 		int retries = 10000;
 
-		if (power & MUSB_POWER_RESUME)				//"Set by the CPU to generate Resume signaling when the device is in Suspend mode."
-			return -EBUSY;							//Already suspended?
+		if (power & MUSB_POWER_RESUME)
+			return -EBUSY;
 
-		if (!(power & MUSB_POWER_SUSPENDM)) {		//"In Host mode, this bit is set by the CPU to enter Suspend mode."
+		if (!(power & MUSB_POWER_SUSPENDM)) {
 			power |= MUSB_POWER_SUSPENDM;
-			musb_writeb(mbase, MUSB_POWER, power);	//Enters suspend mode.
+			musb_writeb(mbase, MUSB_POWER, power);
 
 			/* Needed for OPT A tests */
 			power = musb_readb(mbase, MUSB_POWER);
-			while (power & MUSB_POWER_SUSPENDM) {	//"It is cleared when the CPU reads the interrupt register, or sets the Resume bit above."
-				power = musb_readb(mbase, MUSB_POWER);	//Does not read interrupt register. Does not make sense.
+			while (power & MUSB_POWER_SUSPENDM) {
+				power = musb_readb(mbase, MUSB_POWER);
 				if (retries-- < 1)
 					break;
 			}
@@ -88,48 +84,40 @@ int musb_port_suspend(struct musb *musb, bool do_suspend)
 
 		musb_dbg(musb, "Root port suspended, power %02x", power);
 
-		musb->port1_status |= USB_PORT_STAT_SUSPEND;			//Sets USB port in suspend mode.
-		switch (musb->xceiv->otg->state) {						//Check PHY OTG state.
+		musb->port1_status |= USB_PORT_STAT_SUSPEND;
+		switch (musb->xceiv->otg->state) {
 		case OTG_STATE_A_HOST:
-			musb->xceiv->otg->state = OTG_STATE_A_SUSPEND;		//Set PHY OTG in suspend mode.
-			//host is parent bus, and b_hnp_enable is "OTG: did A-Host enable HNP?"
-			//Host Negotiation Protocol: "Allows the two devices to exchange their host/peripheral roles".
+			musb->xceiv->otg->state = OTG_STATE_A_SUSPEND;
 			musb->is_active = otg->host->b_hnp_enable;
 			if (musb->is_active)
-				mod_timer(&musb->otg_timer, jiffies				//Set timer to 200msec.
+				mod_timer(&musb->otg_timer, jiffies
 					+ msecs_to_jiffies(
 						OTG_TIME_A_AIDL_BDIS));
-			musb_platform_try_idle(musb, 0);					//Empty function.
+			musb_platform_try_idle(musb, 0);
 			break;
 		case OTG_STATE_B_HOST:
-			musb->xceiv->otg->state = OTG_STATE_B_WAIT_ACON;	
+			musb->xceiv->otg->state = OTG_STATE_B_WAIT_ACON;
 			musb->is_active = otg->host->b_hnp_enable;
-			musb_platform_try_idle(musb, 0);					//Empty function.
+			musb_platform_try_idle(musb, 0);
 			break;
 		default:
 			musb_dbg(musb, "bogus rh suspend? %s",
 				usb_otg_state_string(musb->xceiv->otg->state));
 		}
-	} else if (power & MUSB_POWER_SUSPENDM) {					//In suspend mode.
-		power &= ~MUSB_POWER_SUSPENDM;							//Remove suspend mode.
-		power |= MUSB_POWER_RESUME;								//Set resume mode. Should be cleared after 20ms.
+	} else if (power & MUSB_POWER_SUSPENDM) {
+		power &= ~MUSB_POWER_SUSPENDM;
+		power |= MUSB_POWER_RESUME;
 		musb_writeb(mbase, MUSB_POWER, power);
 
 		musb_dbg(musb, "Root port resuming, power %02x", power);
 
-		musb->port1_status |= MUSB_PORT_STAT_RESUME;			//USB port in resume state.
-		//Invokes musb_host_finish_resume after 40ms.
-		//Clears resume bit of POWER register, which should be done after 20ms
-		//of being set. Updates the port status and PHY OTG state, and notifies
-		//kernel of resume event.
-		schedule_delayed_work(&musb->finish_resume_work,		
+		musb->port1_status |= MUSB_PORT_STAT_RESUME;
+		schedule_delayed_work(&musb->finish_resume_work,
 				      msecs_to_jiffies(USB_RESUME_TIMEOUT));
 	}
 	return 0;
 }
 
-//Resets, or stops reset and notifies kernel of resumption, depending on the
-//@do_reset argument.
 void musb_port_reset(struct musb *musb, bool do_reset)
 {
 	u8		power;
@@ -141,14 +129,14 @@ void musb_port_reset(struct musb *musb, bool do_reset)
 		return;
 	}
 
-	if (!is_host_active(musb))										//Not in host mode.
+	if (!is_host_active(musb))
 		return;
 
 	/* NOTE:  caller guarantees it will turn off the reset when
 	 * the appropriate amount of time has passed
 	 */
 	power = musb_readb(mbase, MUSB_POWER);
-	if (do_reset) {													//Perform reset.
+	if (do_reset) {
 		/*
 		 * If RESUME is set, we must make sure it stays minimum 20 ms.
 		 * Then we must clear RESUME and wait a bit to let musb start
@@ -156,57 +144,56 @@ void musb_port_reset(struct musb *musb, bool do_reset)
 		 * fail with "Error! Did not receive an SOF before suspend
 		 * detected".
 		 */
-		if (power &  MUSB_POWER_RESUME) {							//Resume flag has been set, should be cleared after 20ms.
-			long remain = (unsigned long) musb->rh_timer - jiffies;	//Remaining time for resume timeout.
+		if (power &  MUSB_POWER_RESUME) {
+			long remain = (unsigned long) musb->rh_timer - jiffies;
 
-			if (musb->rh_timer > 0 && remain > 0) {					//Timeout shall be made and remaining timeout is greater than zero.
+			if (musb->rh_timer > 0 && remain > 0) {
 				/* take into account the minimum delay after resume */
 				schedule_delayed_work(
-					&musb->deassert_reset_work, remain);			//Schedule this function via musb_deassert_reset, which then do not reset.
+					&musb->deassert_reset_work, remain);
 				return;
 			}
 
-			musb_writeb(mbase, MUSB_POWER,							//Timeout has occurred.
-				    power & ~MUSB_POWER_RESUME);					//Clears Resume bit, which should be done after 20ms.
+			musb_writeb(mbase, MUSB_POWER,
+				    power & ~MUSB_POWER_RESUME);
 
 			/* Give the core 1 ms to clear MUSB_POWER_RESUME */
-			schedule_delayed_work(&musb->deassert_reset_work,		//Schedule this function via musb_deassert_reset, which then do not reset.
+			schedule_delayed_work(&musb->deassert_reset_work,
 					      msecs_to_jiffies(1));
 			return;
 		}
 
 		power &= 0xf0;
-		musb_writeb(mbase, MUSB_POWER,								//Sets reset, and clears resume, suspend and enable suspend bits.
+		musb_writeb(mbase, MUSB_POWER,
 				power | MUSB_POWER_RESET);
 
-		musb->port1_status |= USB_PORT_STAT_RESET;					//Status is reset
-		musb->port1_status &= ~USB_PORT_STAT_ENABLE;				//and not enable.
-		schedule_delayed_work(&musb->deassert_reset_work,			//Schedule this function via musb_deassert_reset, which then do not reset.
+		musb->port1_status |= USB_PORT_STAT_RESET;
+		musb->port1_status &= ~USB_PORT_STAT_ENABLE;
+		schedule_delayed_work(&musb->deassert_reset_work,
 				      msecs_to_jiffies(50));
-	} else {														//Do not reset (stop reset).
+	} else {
 		musb_dbg(musb, "root port reset stopped");
-		musb_platform_pre_root_reset_end(musb);						//Empty function.
+		musb_platform_pre_root_reset_end(musb);
 		musb_writeb(mbase, MUSB_POWER,
-				power & ~MUSB_POWER_RESET);							//Stops reset.
-		musb_platform_post_root_reset_end(musb);					//Empty function.
+				power & ~MUSB_POWER_RESET);
+		musb_platform_post_root_reset_end(musb);
 
 		power = musb_readb(mbase, MUSB_POWER);
-		if (power & MUSB_POWER_HSMODE) {//"When set, this read-only bit indicates High-speed mode successfully negotiated during USB reset."
+		if (power & MUSB_POWER_HSMODE) {
 			musb_dbg(musb, "high-speed device connected");
 			musb->port1_status |= USB_PORT_STAT_HIGH_SPEED;
 		}
 
-		musb->port1_status &= ~USB_PORT_STAT_RESET;					//Not in reset state.
-		musb->port1_status |= USB_PORT_STAT_ENABLE					//Enables (usable) state.
+		musb->port1_status &= ~USB_PORT_STAT_RESET;
+		musb->port1_status |= USB_PORT_STAT_ENABLE
 					| (USB_PORT_STAT_C_RESET << 16)
 					| (USB_PORT_STAT_C_ENABLE << 16);
-		usb_hcd_poll_rh_status(musb->hcd);							//Kernel is notified of resume event.
+		usb_hcd_poll_rh_status(musb->hcd);
 
-		musb->vbuserr_retry = VBUSERR_RETRY_COUNT;					//3 retries.
+		musb->vbuserr_retry = VBUSERR_RETRY_COUNT;
 	}
 }
 
-//Updates OTG state and allows the Linux kernel to respond to an event?
 void musb_root_disconnect(struct musb *musb)
 {
 	struct usb_otg	*otg = musb->xceiv->otg;
@@ -214,16 +201,13 @@ void musb_root_disconnect(struct musb *musb)
 	musb->port1_status = USB_PORT_STAT_POWER
 			| (USB_PORT_STAT_C_CONNECTION << 16);
 
-	//"Root Hub interrupt transfers are polled using a timer if the driver
-	// requests it; otherwise the driver is responsible for calling
-	// usb_hcd_poll_rh_status() when an event occurs."
 	usb_hcd_poll_rh_status(musb->hcd);
 	musb->is_active = 0;
 
 	switch (musb->xceiv->otg->state) {
 	case OTG_STATE_A_SUSPEND:
 		if (otg->host->b_hnp_enable) {
-			musb->xceiv->otg->state = OTG_STATE_A_PERIPHERAL;	//PHY is in state peripheral.
+			musb->xceiv->otg->state = OTG_STATE_A_PERIPHERAL;
 			musb->g.is_a_peripheral = 1;
 			break;
 		}

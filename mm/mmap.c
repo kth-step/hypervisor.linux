@@ -456,6 +456,7 @@ static inline void vma_rb_insert(struct vm_area_struct *vma,
 {
 	/* All rb_subtree_gap values must be consistent prior to insertion */
 	validate_mm_rb(root, NULL);
+
 	rb_insert_augmented(&vma->vm_rb, root, &vma_gap_callbacks);
 }
 
@@ -1018,6 +1019,7 @@ again:
 		uprobe_mmap(insert);
 
 	validate_mm(mm);
+
 	return 0;
 }
 
@@ -1201,14 +1203,12 @@ struct vm_area_struct *vma_merge(struct mm_struct *mm,
 				is_mergeable_anon_vma(prev->anon_vma,
 						      next->anon_vma, NULL)) {
 							/* cases 1, 6 */
-
 			err = __vma_adjust(prev, prev->vm_start,
 					 next->vm_end, prev->vm_pgoff, NULL,
 					 prev);
 		} else					/* cases 2, 5, 7 */
 			err = __vma_adjust(prev, prev->vm_start,
 					 end, prev->vm_pgoff, NULL, prev);
-
 		if (err)
 			return NULL;
 		khugepaged_enter_vma_merge(prev, vm_flags);
@@ -1229,7 +1229,6 @@ struct vm_area_struct *vma_merge(struct mm_struct *mm,
 		else {					/* cases 3, 8 */
 			err = __vma_adjust(area, addr, next->vm_end,
 					 next->vm_pgoff - pglen, NULL, next);
-
 			/*
 			 * In case 3 area is already equal to next and
 			 * this is a noop, but in case 8 "area" has
@@ -2649,10 +2648,8 @@ static void unmap_region(struct mm_struct *mm,
 	tlb_gather_mmu(&tlb, mm);
 	update_hiwater_rss(mm);
 	unmap_vmas(&tlb, vma, start, end);
-printk("mm/mmap.c:unmap_region1\n");
 	free_pgtables(&tlb, vma, prev ? prev->vm_end : FIRST_USER_ADDRESS,
 				 next ? next->vm_start : USER_PGTABLES_CEILING);
-printk("mm/mmap.c:unmap_region2\n");
 	tlb_finish_mmu(&tlb);
 }
 
@@ -3171,11 +3168,8 @@ void exit_mmap(struct mm_struct *mm)
 	tlb_gather_mmu_fullmm(&tlb, mm);
 	/* update_hiwater_rss(mm) here? but nobody should be looking */
 	/* Use -1 here to ensure all VMAs in the mm are unmapped */
-printk("mm/mmap.c:exit_mmap0\n");
 	unmap_vmas(&tlb, vma, 0, -1);
-printk("mm/mmap.c:exit_mmap1\n");
 	free_pgtables(&tlb, vma, FIRST_USER_ADDRESS, USER_PGTABLES_CEILING);
-printk("mm/mmap.c:exit_mmap2\n");
 	tlb_finish_mmu(&tlb);
 
 	/*

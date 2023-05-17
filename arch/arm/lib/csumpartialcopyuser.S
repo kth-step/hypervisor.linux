@@ -15,14 +15,20 @@
 
 #ifdef CONFIG_CPU_SW_DOMAIN_PAN
 		.macro	save_regs
+//         15        0       ip    c3     c0      0
+//  MCR<c> <coproc>, <opc1>, <Rt>, <CRn>, <CRm>{, <opc2>}
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 		mrc	p15, 0, ip, c3, c0, 0
+#endif
 		stmfd	sp!, {r1, r2, r4 - r8, ip, lr}
 		uaccess_enable ip
 		.endm
 
 		.macro	load_regs
 		ldmfd	sp!, {r1, r2, r4 - r8, ip, lr}
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 		mcr	p15, 0, ip, c3, c0, 0
+#endif
 		ret	lr
 		.endm
 #else

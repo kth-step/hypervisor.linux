@@ -277,7 +277,7 @@ static struct map_desc omapam33xx_io_desc[] __initdata = {
 		.length		= MMCHS2_SIZE,
 		.type		= MT_DEVICE
 	}
-#define USBSS_VIRT (MMCHS2_VIRT + MMCHS2_SIZE)
+#define USBSS_VIRT /*0xFA430000*/	(MMCHS2_VIRT + MMCHS2_SIZE)
 #define USBSS_PHYS 0x47400000
 #define USBSS_SIZE 0x00008000
 	,

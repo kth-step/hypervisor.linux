@@ -2295,7 +2295,6 @@ __acquires(&pool->lock)
 	lockdep_invariant_state(true);
 	trace_workqueue_execute_start(work);
 	worker->current_func(work);
-
 	/*
 	 * While we must be careful to not use "work" after this, the trace
 	 * point will only record its address.

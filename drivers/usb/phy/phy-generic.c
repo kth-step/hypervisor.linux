@@ -210,23 +210,20 @@ int usb_phy_gen_create_phy(struct device *dev, struct usb_phy_generic *nop)
 
 	u32 clk_rate = 0;
 	bool needs_vcc = false, needs_clk = false;
-//printk("usb_phy_gen_create_phy1\n");
+
 	if (dev->of_node) {
 		struct device_node *node = dev->of_node;
-//printk("usb_phy_gen_create_phy2\n");
+
 		if (of_property_read_u32(node, "clock-frequency", &clk_rate))
 			clk_rate = 0;
-//printk("usb_phy_gen_create_phy3\n");
+
 		needs_vcc = of_property_read_bool(node, "vcc-supply");
-//printk("usb_phy_gen_create_phy4\n");
 		needs_clk = of_property_read_bool(node, "clocks");
 	}
-//printk("usb_phy_gen_create_phy5\n");
 	nop->gpiod_reset = devm_gpiod_get_optional(dev, "reset",
 						   GPIOD_ASIS);
 	err = PTR_ERR_OR_ZERO(nop->gpiod_reset);
 	if (!err) {
-//printk("usb_phy_gen_create_phy6\n");
 		nop->gpiod_vbus = devm_gpiod_get_optional(dev,
 						 "vbus-detect",
 						 GPIOD_ASIS);
@@ -239,7 +236,6 @@ int usb_phy_gen_create_phy(struct device *dev, struct usb_phy_generic *nop)
 		dev_err(dev, "Error requesting RESET or VBUS GPIO\n");
 		return err;
 	}
-//printk("usb_phy_gen_create_phy7\n");
 	if (nop->gpiod_reset)
 		gpiod_direction_output(nop->gpiod_reset, 1);
 
@@ -247,7 +243,7 @@ int usb_phy_gen_create_phy(struct device *dev, struct usb_phy_generic *nop)
 			GFP_KERNEL);
 	if (!nop->phy.otg)
 		return -ENOMEM;
-//printk("usb_phy_gen_create_phy8\n");
+
 	nop->clk = devm_clk_get(dev, "main_clk");
 	if (IS_ERR(nop->clk)) {
 		dev_dbg(dev, "Can't get phy clock: %ld\n",
@@ -255,7 +251,7 @@ int usb_phy_gen_create_phy(struct device *dev, struct usb_phy_generic *nop)
 		if (needs_clk)
 			return PTR_ERR(nop->clk);
 	}
-//printk("usb_phy_gen_create_phy9\n");
+
 	if (!IS_ERR(nop->clk) && clk_rate) {
 		err = clk_set_rate(nop->clk, clk_rate);
 		if (err) {
@@ -263,7 +259,7 @@ int usb_phy_gen_create_phy(struct device *dev, struct usb_phy_generic *nop)
 			return err;
 		}
 	}
-//printk("usb_phy_gen_create_phy10\n");
+
 	nop->vcc = devm_regulator_get(dev, "vcc");
 	if (IS_ERR(nop->vcc)) {
 		dev_dbg(dev, "Error getting vcc regulator: %ld\n",
@@ -282,7 +278,7 @@ int usb_phy_gen_create_phy(struct device *dev, struct usb_phy_generic *nop)
 	nop->phy.otg->usb_phy		= &nop->phy;
 	nop->phy.otg->set_host		= nop_set_host;
 	nop->phy.otg->set_peripheral	= nop_set_peripheral;
-//printk("usb_phy_gen_create_phy11\n");
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(usb_phy_gen_create_phy);

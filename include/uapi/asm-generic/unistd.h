@@ -879,9 +879,17 @@ __SYSCALL(__NR_memfd_secret, sys_memfd_secret)
 #endif
 #define __NR_process_mrelease 448
 __SYSCALL(__NR_process_mrelease, sys_process_mrelease)
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+#define __NR_cctv_photo 449
+__SYSCALL(__NR_cctv_photo, sys_cctv_photo)
+#endif
 
 #undef __NR_syscalls
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+#define __NR_syscalls 450
+#else
 #define __NR_syscalls 449
+#endif
 
 /*
  * 32 bit systems traditionally used different

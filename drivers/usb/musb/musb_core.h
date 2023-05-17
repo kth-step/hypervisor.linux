@@ -240,13 +240,11 @@ struct musb_hw_ep {
 
 static inline struct musb_request *next_in_request(struct musb_hw_ep *hw_ep)
 {
-//printk("drivers/usb/musb/musb_core.h:next_in_request\n");
 	return next_request(&hw_ep->ep_in);
 }
 
 static inline struct musb_request *next_out_request(struct musb_hw_ep *hw_ep)
 {
-//printk("drivers/usb/musb/musb_core.h:next_out_request\n");
 	return next_request(&hw_ep->ep_out);
 }
 
@@ -323,7 +321,7 @@ struct musb {
 	struct dma_controller	*dma_controller;
 
 	struct device		*controller;
-	void __iomem		*ctrl_base;	//Virtual addresses of USB0/USB1 for the USB controller musb.
+	void __iomem		*ctrl_base;
 	void __iomem		*mregs;
 
 #if IS_ENABLED(CONFIG_USB_MUSB_TUSB6010)
@@ -424,13 +422,11 @@ struct musb {
 
 static inline struct musb *gadget_to_musb(struct usb_gadget *g)
 {
-//printk("drivers/usb/musb/musb_core.h:gadget_to_musb\n");
 	return container_of(g, struct musb, g);
 }
 
 static inline char *musb_ep_xfertype_string(u8 type)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_ep_xfertype_string\n");
 	char *s;
 
 	switch (type) {
@@ -456,7 +452,6 @@ static inline char *musb_ep_xfertype_string(u8 type)
 static inline int musb_read_fifosize(struct musb *musb,
 		struct musb_hw_ep *hw_ep, u8 epnum)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_read_fifosize\n");
 	void __iomem *mbase = musb->mregs;
 	u8 reg = 0;
 
@@ -484,12 +479,8 @@ static inline int musb_read_fifosize(struct musb *musb,
 	return 0;
 }
 
-//Initializes maximum packet sizes for endpoint 0, for both transmission and
-//reception and sets the shared FIFO flag to true (TX and RX uses the same
-//FIFO).
 static inline void musb_configure_ep0(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_configure_ep0\n");
 	musb->endpoints[0].max_packet_sz_tx = MUSB_EP0_FIFOSIZE;
 	musb->endpoints[0].max_packet_sz_rx = MUSB_EP0_FIFOSIZE;
 	musb->endpoints[0].is_shared_fifo = true;
@@ -518,56 +509,41 @@ int musb_queue_resume_work(struct musb *musb,
 			   int (*callback)(struct musb *musb, void *data),
 			   void *data);
 
-//Never invoked? set_vbus is never initialized? Not doing anything?
 static inline void musb_platform_set_vbus(struct musb *musb, int is_on)
 {
-	if (musb->ops->set_vbus) {
-		printk("drivers/usb/musb/musb_core.h:musb_platform_set_vbus1\n");
+	if (musb->ops->set_vbus)
 		musb->ops->set_vbus(musb, is_on);
-	} else
-		printk("drivers/usb/musb/musb_core.h:musb_platform_set_vbus2\n");
 }
 
-//Invokes dsps_musb_enable which enables MUSB interrupts via USB0/1 TRM
-//registers.
 static inline void musb_platform_enable(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_enable\n");
 	if (musb->ops->enable)
 		musb->ops->enable(musb);
 }
 
 static inline void musb_platform_disable(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_disable\n");
 	if (musb->ops->disable)
 		musb->ops->disable(musb);
 }
 
-//Calls dsps_musb_set_mode, which sets the (M)USB0/1 mode to host, peripheral,
-//OTG.
 static inline int musb_platform_set_mode(struct musb *musb, u8 mode)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_set_mode\n");
 	if (!musb->ops->set_mode)
 		return 0;
 
 	return musb->ops->set_mode(musb, mode);
 }
 
-//Empty function?
 static inline void musb_platform_try_idle(struct musb *musb,
 		unsigned long timeout)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_try_idle\n");
 	if (musb->ops->try_idle)
 		musb->ops->try_idle(musb, timeout);
 }
 
-//Recovers from data transfer exceeding size limit?
 static inline int  musb_platform_recover(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_recover\n");
 	if (!musb->ops->recover)
 		return 0;
 
@@ -576,55 +552,42 @@ static inline int  musb_platform_recover(struct musb *musb)
 
 static inline int musb_platform_get_vbus_status(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_get_vbus_status\n");
 	if (!musb->ops->vbus_status)
 		return -EINVAL;
 
 	return musb->ops->vbus_status(musb);
 }
 
-//Allocates data structures, initializes timer, resets hardware, and initializes
-//data structure fields.
 static inline int musb_platform_init(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_init\n");
 	if (!musb->ops->init)
 		return -EINVAL;
 
-	return musb->ops->init(musb);	//Invokes dsps_musb_init initialized by drivers/usb/musb/musb_dsps.c:dsps_musb_init.
+	return musb->ops->init(musb);
 }
 
-//Turns of PHY.
 static inline int musb_platform_exit(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_exit\n");
 	if (!musb->ops->exit)
 		return -EINVAL;
 
-	return musb->ops->exit(musb);	//Invokes dsps_musb_exit.
+	return musb->ops->exit(musb);
 }
 
-//Empty?
 static inline void musb_platform_pre_root_reset_end(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_pre_root_reset_end\n");
-	if (musb->ops->pre_root_reset_end)	//Not initialized. Empty?
+	if (musb->ops->pre_root_reset_end)
 		musb->ops->pre_root_reset_end(musb);
 }
 
-//Empty?
 static inline void musb_platform_post_root_reset_end(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_post_root_reset_end\n");
-	if (musb->ops->post_root_reset_end)	//Not initialized. Empty?
+	if (musb->ops->post_root_reset_end)
 		musb->ops->post_root_reset_end(musb);
 }
 
-//Invokes dsps_musb_clear_ep_rxintr, which clears TI TRM USB0/1IRQSTAT0 status
-//for given RX endpoint.
 static inline void musb_platform_clear_ep_rxintr(struct musb *musb, int epnum)
 {
-//printk("drivers/usb/musb/musb_core.h:musb_platform_clear_ep_rxintr\n");
 	if (musb->ops->clear_ep_rxintr)
 		musb->ops->clear_ep_rxintr(musb, epnum);
 }

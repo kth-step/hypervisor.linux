@@ -130,7 +130,7 @@ int of_dma_controller_register(struct device_node *np,
 	ofdma = kzalloc(sizeof(*ofdma), GFP_KERNEL);
 	if (!ofdma)
 		return -ENOMEM;
-printk("drivers/dma/of-dma.c:of_dma_controller_register: %s, %s\n", np->name, np->full_name);
+
 	ofdma->of_node = np;
 	ofdma->of_dma_xlate = of_dma_xlate;
 	ofdma->of_dma_data = data;
@@ -289,7 +289,6 @@ struct dma_chan *of_dma_request_slave_channel(struct device_node *np,
 		ofdma = of_dma_find_controller(&dma_spec);
 
 		if (ofdma) {
-//printk("drivers/dma/of-dma.c:of_dma_request_slave_channel: ofdma\n");
 			chan = ofdma->of_dma_xlate(&dma_spec, ofdma);
 		} else {
 			ret_no_channel = -EPROBE_DEFER;

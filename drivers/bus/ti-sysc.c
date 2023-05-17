@@ -1319,7 +1319,26 @@ static int __maybe_unused sysc_runtime_suspend(struct device *dev)
 			goto err_allow_idle;
 	}
 
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
+//This prevents Linux from shutting down the clock to the SPI (and other two MB
+//peripherals in L4_PER starting at 0x4800_0000) used by the CCTV guest.
+//
+//Seems to be a hardware implementation aspect that the register
+//CM_PER_MMC1_CLKCTRL is prevented to being disabled (which is the last
+//peripheral of the first 2 MB peripherals in L4_PER, rather than the register
+//CM_PER_SPI0_CLKCTRL. This is not sufficient. The current fix seems to work.
+//
+//The following code snippet was inserted into drivers/clk/ti/clk.c:clk_memmap_writel, which is by this function
+//drivers/bus/ti-sysc:sysc_disable_main_clocks via /drivers/clk.c:disable_clk.
+//	if ((uint32_t) reg->ptr == 0xF9E000F4 && (val & 0x3) == 0) {
+/*		printk("CM_PER_MMC1_CLKCTRL: MODULE_MODE = %s, IDLE_STATE = %s\n", (val & 0x3) ? "ENABLE" : "DISABLE",
+((val & 0x30000) >> 16) == 0 ? "Func" :
+((val & 0x30000) >> 16) == 1 ? "Trans" : 
+((val & 0x30000) >> 16) == 2 ? "Idle" : "Disable");*/
+//		return;
+//	}
 	sysc_disable_main_clocks(ddata);
+#endif
 
 	if (sysc_opt_clks_needed(ddata))
 		sysc_disable_opt_clocks(ddata);
@@ -1754,24 +1773,9 @@ static u32 sysc_quirk_dispc(struct sysc *ddata, int dispc_offset,
 
 	/* Remap the whole module range to be able to reset dispc outputs */
 	devm_iounmap(ddata->dev, ddata->module_va);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xEEEEEEEE), "r" (ddata->module_va), "r" (0xEEEEEEEE) : "memory", "r0", "r1", "r2");
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xEEEEEEEE), "r" (ddata->module_pa), "r" (0xEEEEEEEE) : "memory", "r0", "r1", "r2");
 	ddata->module_va = devm_ioremap(ddata->dev,
 					ddata->module_pa,
 					ddata->module_size);
-asm volatile ("mov R0, %0	\n\t"
-			  "mov R1, %1	\n\t"
-			  "mov R2, %2	\n\t"
-			  "SWI 1045"
-			  :: "r" (0xEEEEEEEE), "r" (ddata->module_size), "r" (0xEEEEEEEF) : "memory", "r0", "r1", "r2");
 	if (!ddata->module_va)
 		return -EIO;
 

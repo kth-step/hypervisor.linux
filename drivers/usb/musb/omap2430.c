@@ -421,7 +421,7 @@ static int omap2430_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "failed to register musb device\n");
 		goto err3;
 	}
-printk("drivers/usb/musb/omap2430.c:omap2430_probe SUCCESS\n");
+
 	return 0;
 
 err3:

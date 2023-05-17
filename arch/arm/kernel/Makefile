@@ -107,3 +107,5 @@ endif
 obj-$(CONFIG_HAVE_ARM_SMCCC)	+= smccc-call.o
 
 extra-y := $(head-y) vmlinux.lds
+
+obj-$(CONFIG_TRUSTFULL_HYPERVISOR) += cctv_photo.o

@@ -129,25 +129,20 @@ struct phy_control *am335x_get_phy_control(struct device *dev)
 {
 	struct device_node *node;
 	struct am335x_control_usb *ctrl_usb;
-//printk("drivers/usb/phy/phy-am335x-control.c:am335x_get_phy_control: device init_name: %s\n", dev->init_name);
-//Device tree node of device: property identified by ti,ctrl_mod.
-//is usb control module in am33xx-l4.dtsi: device tree node: control@620.
+
 	node = of_parse_phandle(dev->of_node, "ti,ctrl_mod", 0);
-//printk("drivers/usb/phy/phy-am335x-control.c:am335x_get_phy_control: ti,ctrl_mod name: %s\n", node->name);
 	if (!node)
 		return NULL;
 
-	dev = bus_find_device(&platform_bus_type, NULL, node, match);	//Finds the control module device on the bus.
-//printk("drivers/usb/phy/phy-am335x-control.c:am335x_get_phy_control: bus init_name: %s\n", dev->init_name);
-	of_node_put(node);	//decrement references to node, since its not used anymore.
+	dev = bus_find_device(&platform_bus_type, NULL, node, match);
+	of_node_put(node);
 	if (!dev)
 		return NULL;
 
 	ctrl_usb = dev_get_drvdata(dev);
-	put_device(dev);	//Decrement reference count on dev.
+	put_device(dev);
 	if (!ctrl_usb)
 		return NULL;
-//printk("drivers/usb/phy/phy-am335x-control.c:am335x_get_phy_control: Returns a pointer to the struct containing power and wake up functions.\n");
 	return &ctrl_usb->phy_ctrl;
 }
 EXPORT_SYMBOL_GPL(am335x_get_phy_control);

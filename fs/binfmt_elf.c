@@ -386,8 +386,7 @@ static unsigned long elf_map(struct file *filep, unsigned long addr,
 	if (total_size) {
 		total_size = ELF_PAGEALIGN(total_size);
 		map_addr = vm_mmap(filep, addr, total_size, prot, type, off);
-
-		if (!BAD_ADDR(map_addr)) 
+		if (!BAD_ADDR(map_addr))
 			vm_munmap(map_addr+size, total_size-size);
 	} else
 		map_addr = vm_mmap(filep, addr, size, prot, type, off);
@@ -1016,16 +1015,8 @@ out_free_interp:
 
 	/* Do this so that we can load the interpreter, if need be.  We will
 	   change some of these later */
-//#ifdef CONFIG_TRUSTFULL_HYPERVISOR
-möjliggör randomisering igen.
-//	retval = setup_arg_pages(bprm, STACK_TOP, executable_stack);
-//#else
-printk("fs/binfmt_elf.c:load_elf_binary1\n");
 	retval = setup_arg_pages(bprm, randomize_stack_top(STACK_TOP),
 				 executable_stack);
-printk("fs/binfmt_elf.c:load_elf_binary2\n");
-//#endif
-
 	if (retval < 0)
 		goto out_free_dentry;
 	
@@ -1078,6 +1069,7 @@ printk("fs/binfmt_elf.c:load_elf_binary2\n");
 
 		elf_prot = make_prot(elf_ppnt->p_flags, &arch_state,
 				     !!interpreter, false);
+
 		elf_flags = MAP_PRIVATE;
 
 		vaddr = elf_ppnt->p_vaddr;
@@ -1120,10 +1112,8 @@ printk("fs/binfmt_elf.c:load_elf_binary2\n");
 			 */
 			if (interpreter) {
 				load_bias = ELF_ET_DYN_BASE;
-//#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 				if (current->flags & PF_RANDOMIZE)
 					load_bias += arch_mmap_rnd();
-//#endif
 				alignment = maximum_alignment(elf_phdata, elf_ex->e_phnum);
 				if (alignment)
 					load_bias &= ~(alignment - 1);
@@ -1216,7 +1206,6 @@ printk("fs/binfmt_elf.c:load_elf_binary2\n");
 	retval = set_brk(elf_bss, elf_brk, bss_prot);
 	if (retval)
 		goto out_free_dentry;
-
 	if (likely(elf_bss != elf_brk) && unlikely(padzero(elf_bss))) {
 		retval = -EFAULT; /* Nobody gets to see this, but.. */
 		goto out_free_dentry;
@@ -1256,6 +1245,7 @@ printk("fs/binfmt_elf.c:load_elf_binary2\n");
 	}
 
 	kfree(elf_phdata);
+
 	set_binfmt(&elf_format);
 
 #ifdef ARCH_HAS_SETUP_ADDITIONAL_PAGES
@@ -1276,7 +1266,6 @@ printk("fs/binfmt_elf.c:load_elf_binary2\n");
 	mm->end_data = end_data;
 	mm->start_stack = bprm->p;
 
-//#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 	if ((current->flags & PF_RANDOMIZE) && (randomize_va_space > 1)) {
 		/*
 		 * For architectures with ELF randomization, when executing
@@ -1295,7 +1284,6 @@ printk("fs/binfmt_elf.c:load_elf_binary2\n");
 		current->brk_randomized = 1;
 #endif
 	}
-//#endif
 
 	if (current->personality & MMAP_PAGE_ZERO) {
 		/* Why this, you ask???  Well SVr4 maps page 0 as read-only,

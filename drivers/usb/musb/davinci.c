@@ -571,7 +571,7 @@ static int davinci_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "failed to register musb device: %d\n", ret);
 		goto err1;
 	}
-printk("drivers/usb/musb/davinci.c:davinci_probe SUCCESS\n");
+
 	return 0;
 
 err1:

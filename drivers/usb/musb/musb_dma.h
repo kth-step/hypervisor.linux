@@ -135,13 +135,9 @@ struct dma_channel {
  * then it's possible that the hardware has completed (or aborted) a transfer,
  * so the driver needs to update that status.
  */
-//Status of CPPI 4.1 DMA channel: unassigned to endpoint, assigned but not in
-//use, transactions active, transaction(s) aborted due to dma or memory bus
-//error, or core error or USB fault.
 static inline enum dma_channel_status
 dma_channel_status(struct dma_channel *c)
 {
-//printk("drivers/usb/musb/musb_dma.h:dma_channel_status\n");
 	return (is_dma_capable() && c) ? c->status : MUSB_DMA_STATUS_UNKNOWN;
 }
 
@@ -184,13 +180,10 @@ extern void musb_dma_completion(struct musb *musb, u8 epnum, u8 transmit);
 static inline struct dma_controller *
 musb_dma_controller_create(struct musb *m, void __iomem *io)
 {
-//printk("drivers/usb/musb/musb_dma.h:musb_dma_controller_create\n");
 	return NULL;
 }
 
-static inline void musb_dma_controller_destroy(struct dma_controller *d) {
-//printk("drivers/usb/musb/musb_dma.h:musb_dma_controller_destroy\n");
-}
+static inline void musb_dma_controller_destroy(struct dma_controller *d) { }
 
 #else
 

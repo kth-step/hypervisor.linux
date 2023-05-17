@@ -43,10 +43,8 @@ struct musb_qh {
 };
 
 /* map from control or bulk queue head to the first qh on that ring */
-//Gets first qh.
 static inline struct musb_qh *first_qh(struct list_head *q)
 {
-//printk("drivers/usb/musb/musb_host.h:first_qh\n");
 	if (list_empty(q))
 		return NULL;
 	return list_entry(q->next, struct musb_qh, ring);
@@ -71,51 +69,37 @@ extern void musb_host_finish_resume(struct work_struct *work);
 #else
 static inline struct musb *hcd_to_musb(struct usb_hcd *hcd)
 {
-//printk("drivers/usb/musb/musb_host.h:hcd_to_musb\n");
 	return NULL;
 }
 
 static inline irqreturn_t musb_h_ep0_irq(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_host.h:musb_h_ep0_irq\n");
 	return 0;
 }
 
 static inline int musb_host_alloc(struct musb *musb)
 {
-//printk("drivers/usb/musb/musb_host.h:musb_host_alloc\n");
 	return 0;
 }
 
 static inline int musb_host_setup(struct musb *musb, int power_budget)
 {
-//printk("drivers/usb/musb/musb_host.h:musb_host_setup\n");
 	return 0;
 }
 
-static inline void musb_host_cleanup(struct musb *musb)		{
-//printk("drivers/usb/musb/musb_host.h:musb_host_cleanup\n");}
-static inline void musb_host_free(struct musb *musb)		{
-//printk("drivers/usb/musb/musb_host.h:musb_host_free\n");}
-static inline void musb_host_tx(struct musb *musb, u8 epnum)	{
-//printk("drivers/usb/musb/musb_host.h:musb_host_tx\n");}
-static inline void musb_host_rx(struct musb *musb, u8 epnum)	{
-//printk("drivers/usb/musb/musb_host.h:musb_host_rx\n");}
-static inline void musb_root_disconnect(struct musb *musb)	{
-//printk("drivers/usb/musb/musb_host.h:musb_root_disconnect\n");}
-static inline void musb_host_resume_root_hub(struct musb *musb)	{
-//printk("drivers/usb/musb/musb_host.h:musb_host_resume_root_hub\n");}
-static inline void musb_host_poke_root_hub(struct musb *musb)	{
-//printk("drivers/usb/musb/musb_host.h:musb_host_poke_root_hub\n");}
+static inline void musb_host_cleanup(struct musb *musb)		{}
+static inline void musb_host_free(struct musb *musb)		{}
+static inline void musb_host_tx(struct musb *musb, u8 epnum)	{}
+static inline void musb_host_rx(struct musb *musb, u8 epnum)	{}
+static inline void musb_root_disconnect(struct musb *musb)	{}
+static inline void musb_host_resume_root_hub(struct musb *musb)	{}
+static inline void musb_host_poke_root_hub(struct musb *musb)	{}
 static inline int musb_port_suspend(struct musb *musb, bool do_suspend)
 {
-//printk("drivers/usb/musb/musb_host.h:musb_port_suspend\n");
 	return 0;
 }
-static inline void musb_port_reset(struct musb *musb, bool do_reset) {
-//printk("drivers/usb/musb/musb_host.h:musb_port_reset\n");}
-static inline void musb_host_finish_resume(struct work_struct *work) {
-//printk("drivers/usb/musb/musb_host.h:musb_host_finish_resume\n");}
+static inline void musb_port_reset(struct musb *musb, bool do_reset) {}
+static inline void musb_host_finish_resume(struct work_struct *work) {}
 #endif
 
 struct usb_hcd;
@@ -125,10 +109,8 @@ extern int musb_hub_control(struct usb_hcd *hcd,
 			u16 typeReq, u16 wValue, u16 wIndex,
 			char *buf, u16 wLength);
 
-//Next URB of qh.
 static inline struct urb *next_urb(struct musb_qh *qh)
 {
-//printk("drivers/usb/musb/musb_host.h:next_urb\n");
 	struct list_head	*queue;
 
 	if (!qh)

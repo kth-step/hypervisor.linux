@@ -507,7 +507,7 @@ static int am35x_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "failed to register musb device: %d\n", ret);
 		goto err8;
 	}
-printk("drivers/usb/musb/am35x.c:am35x_probe SUCCESS\n");
+
 	return 0;
 
 err8:

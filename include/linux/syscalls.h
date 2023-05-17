@@ -1069,12 +1069,15 @@ asmlinkage long sys_pciconfig_write(unsigned long bus, unsigned long dfn,
 				void __user *buf);
 asmlinkage long sys_pciconfig_iobase(long which, unsigned long bus, unsigned long devfn);
 
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+asmlinkage long sys_cctv_photo(uint32_t *buf, uint32_t byte_size);
+#endif
+
 /* powerpc */
 asmlinkage long sys_spu_run(int fd, __u32 __user *unpc,
 				 __u32 __user *ustatus);
 asmlinkage long sys_spu_create(const char __user *name,
 		unsigned int flags, umode_t mode, int fd);
-
 
 /*
  * Deprecated system calls which are still defined in

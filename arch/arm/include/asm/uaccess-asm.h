@@ -73,7 +73,9 @@
 	//and handlers, and user space, are accessible according to the page tables.
 	mov	\tmp, #DACR_UACCESS_ENABLE
 	//Set DACR to DACR_UACCESS_ENABLE.
+#ifndef CONFIG_TRUSTFULL_HYPERVISOR
 	mcr	p15, 0, \tmp, c3, c0, 0
+#endif
 	.if	\isb
 	//"Instruction Synchronization Barrier flushes the pipeline in the
 	// processor, so that all instructions following the ISB are fetched from

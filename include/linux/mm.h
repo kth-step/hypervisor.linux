@@ -2078,18 +2078,14 @@ static inline void mm_inc_nr_puds(struct mm_struct *mm)
 {
 	if (mm_pud_folded(mm))
 		return;
-printk("include/linux/mm.h:mm_inc_nr_puds1, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	atomic_long_add(PTRS_PER_PUD * sizeof(pud_t), &mm->pgtables_bytes);
-printk("include/linux/mm.h:mm_inc_nr_puds2, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 
 static inline void mm_dec_nr_puds(struct mm_struct *mm)
 {
 	if (mm_pud_folded(mm))
 		return;
-printk("include/linux/mm.h:mm_dec_nr_puds1, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	atomic_long_sub(PTRS_PER_PUD * sizeof(pud_t), &mm->pgtables_bytes);
-printk("include/linux/mm.h:mm_dec_nr_puds2, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 #endif
 
@@ -2110,47 +2106,36 @@ static inline void mm_inc_nr_pmds(struct mm_struct *mm)
 {
 	if (mm_pmd_folded(mm))
 		return;
-printk("include/linux/mm.h:mm_inc_nr_pmds1, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	atomic_long_add(PTRS_PER_PMD * sizeof(pmd_t), &mm->pgtables_bytes);
-printk("include/linux/mm.h:mm_inc_nr_pmds2, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 
 static inline void mm_dec_nr_pmds(struct mm_struct *mm)
 {
 	if (mm_pmd_folded(mm))
 		return;
-printk("include/linux/mm.h:mm_dec_nr_pmds1, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	atomic_long_sub(PTRS_PER_PMD * sizeof(pmd_t), &mm->pgtables_bytes);
-printk("include/linux/mm.h:mm_dec_nr_pmds2, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 #endif
 
 #ifdef CONFIG_MMU
 static inline void mm_pgtables_bytes_init(struct mm_struct *mm)
 {
-printk("include/linux/mm.h:mm_pgtables_bytes_init1, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	atomic_long_set(&mm->pgtables_bytes, 0);
-printk("include/linux/mm.h:mm_pgtables_bytes_init2, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 
 static inline unsigned long mm_pgtables_bytes(const struct mm_struct *mm)
 {
-printk("include/linux/mm.h:mm_pgtables_bytes, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	return atomic_long_read(&mm->pgtables_bytes);
 }
 
 static inline void mm_inc_nr_ptes(struct mm_struct *mm)
 {
-printk("include/linux/mm.h:mm_inc_nr_ptes1, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	atomic_long_add(PTRS_PER_PTE * sizeof(pte_t), &mm->pgtables_bytes);
-printk("include/linux/mm.h:mm_inc_nr_ptes2, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 
 static inline void mm_dec_nr_ptes(struct mm_struct *mm)
 {
-printk("include/linux/mm.h:mm_dec_nr_ptes1, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 	atomic_long_sub(PTRS_PER_PTE * sizeof(pte_t), &mm->pgtables_bytes);
-printk("include/linux/mm.h:mm_dec_nr_ptes2, mm = 0x%p, &mm->pgtables_bytes = %d at 0x%p\n", mm, (mm->pgtables_bytes).counter, &(mm->pgtables_bytes));
 }
 #else
 

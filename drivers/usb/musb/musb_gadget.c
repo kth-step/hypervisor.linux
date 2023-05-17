@@ -34,7 +34,7 @@ static inline void map_dma_buffer(struct musb_request *request,
 {
 	int compatible = true;
 	struct dma_controller *dma = musb->dma_controller;
-printk("drivers/usb/musb/musb_gadget.c:map_dma_buffer\n");
+
 	request->map_state = UN_MAPPED;
 
 	if (!is_dma_capable() || !musb_ep->dma)
@@ -84,7 +84,7 @@ static inline void unmap_dma_buffer(struct musb_request *request,
 				struct musb *musb)
 {
 	struct musb_ep *musb_ep = request->ep;
-printk("drivers/usb/musb/musb_gadget.c:unmap_dma_buffer\n");
+
 	if (!is_buffer_mapped(request) || !musb_ep->dma)
 		return;
 
@@ -129,7 +129,7 @@ __acquires(ep->musb->lock)
 	struct musb_request	*req;
 	struct musb		*musb;
 	int			busy = ep->busy;
-printk("drivers/usb/musb/musb_gadget.c:musb_g_giveback\n");
+
 	req = to_musb_request(request);
 
 	list_del(&req->list);
@@ -160,7 +160,7 @@ static void nuke(struct musb_ep *ep, const int status)
 	struct musb		*musb = ep->musb;
 	struct musb_request	*req = NULL;
 	void __iomem *epio = ep->musb->endpoints[ep->current_epnum].regs;
-printk("drivers/usb/musb/musb_gadget.c:nuke\n");
+
 	ep->busy = 1;
 
 	if (is_dma_capable() && ep->dma) {
@@ -207,7 +207,6 @@ printk("drivers/usb/musb/musb_gadget.c:nuke\n");
 
 static inline int max_ep_writesize(struct musb *musb, struct musb_ep *ep)
 {
-printk("drivers/usb/musb/musb_gadget.c:max_ep_writesize\n");
 	if (can_bulk_split(musb, ep->type))
 		return ep->hw_ep->max_packet_sz_tx;
 	else
@@ -229,7 +228,7 @@ static void txstate(struct musb *musb, struct musb_request *req)
 	struct usb_request	*request;
 	u16			fifo_count = 0, csr;
 	int			use_dma = 0;
-printk("drivers/usb/musb/musb_gadget.c:txstate\n");
+
 	musb_ep = req->ep;
 
 	/* Check if EP is disabled */
@@ -413,7 +412,7 @@ void musb_g_tx(struct musb *musb, u8 epnum)
 	struct musb_ep		*musb_ep = &musb->endpoints[epnum].ep_in;
 	void __iomem		*epio = musb->endpoints[epnum].regs;
 	struct dma_channel	*dma;
-printk("drivers/usb/musb/musb_gadget.c:musb_g_tx\n");
+
 	musb_ep_select(mbase, epnum);
 	req = next_request(musb_ep);
 	request = &req->request;
@@ -518,7 +517,6 @@ printk("drivers/usb/musb/musb_gadget.c:musb_g_tx\n");
  */
 static void rxstate(struct musb *musb, struct musb_request *req)
 {
-printk("drivers/usb/musb/musb_gadget.c:rxstate\n");
 	const u8		epnum = req->epnum;
 	struct usb_request	*request = &req->request;
 	struct musb_ep		*musb_ep;
@@ -796,7 +794,7 @@ void musb_g_rx(struct musb *musb, u8 epnum)
 	void __iomem		*epio = musb->endpoints[epnum].regs;
 	struct dma_channel	*dma;
 	struct musb_hw_ep	*hw_ep = &musb->endpoints[epnum];
-printk("drivers/usb/musb/musb_gadget.c:musb_g_rx\n");
+
 	if (hw_ep->is_shared_fifo)
 		musb_ep = &hw_ep->ep_in;
 	else
@@ -917,7 +915,7 @@ static int musb_gadget_enable(struct usb_ep *ep,
 	u16		csr;
 	unsigned	tmp;
 	int		status = -EINVAL;
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_enable\n");
+
 	if (!ep || !desc)
 		return -EINVAL;
 
@@ -1087,7 +1085,7 @@ static int musb_gadget_disable(struct usb_ep *ep)
 	u8		epnum;
 	struct musb_ep	*musb_ep;
 	void __iomem	*epio;
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_disable\n");
+
 	musb_ep = to_musb_ep(ep);
 	musb = musb_ep->musb;
 	epnum = musb_ep->current_epnum;
@@ -1128,7 +1126,6 @@ printk("drivers/usb/musb/musb_gadget.c:musb_gadget_disable\n");
  */
 struct usb_request *musb_alloc_request(struct usb_ep *ep, gfp_t gfp_flags)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_alloc_request\n");
 	struct musb_ep		*musb_ep = to_musb_ep(ep);
 	struct musb_request	*request = NULL;
 
@@ -1150,7 +1147,6 @@ printk("drivers/usb/musb/musb_gadget.c:musb_alloc_request\n");
  */
 void musb_free_request(struct usb_ep *ep, struct usb_request *req)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_free_request\n");
 	struct musb_request *request = to_musb_request(req);
 
 	trace_musb_req_free(request);
@@ -1171,7 +1167,6 @@ struct free_record {
  */
 void musb_ep_restart(struct musb *musb, struct musb_request *req)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_ep_restart\n");
 	trace_musb_req_start(req);
 	musb_ep_select(musb->mregs, req->epnum);
 	if (req->tx)
@@ -1183,7 +1178,7 @@ printk("drivers/usb/musb/musb_gadget.c:musb_ep_restart\n");
 static int musb_ep_restart_resume_work(struct musb *musb, void *data)
 {
 	struct musb_request *req = data;
-printk("drivers/usb/musb/musb_gadget.c:musb_ep_restart_resume_work\n");
+
 	musb_ep_restart(musb, req);
 
 	return 0;
@@ -1197,7 +1192,7 @@ static int musb_gadget_queue(struct usb_ep *ep, struct usb_request *req,
 	struct musb		*musb;
 	int			status;
 	unsigned long		lockflags;
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_queue\n");
+
 	if (!ep || !req)
 		return -EINVAL;
 	if (!req->buf)
@@ -1269,7 +1264,6 @@ unlock:
 
 static int musb_gadget_dequeue(struct usb_ep *ep, struct usb_request *request)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_dequeue\n");
 	struct musb_ep		*musb_ep = to_musb_ep(ep);
 	struct musb_request	*req = to_musb_request(request);
 	struct musb_request	*r;
@@ -1330,7 +1324,6 @@ done:
  */
 static int musb_gadget_set_halt(struct usb_ep *ep, int value)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_set_halt\n");
 	struct musb_ep		*musb_ep = to_musb_ep(ep);
 	u8			epnum = musb_ep->current_epnum;
 	struct musb		*musb = musb_ep->musb;
@@ -1418,7 +1411,7 @@ done:
 static int musb_gadget_set_wedge(struct usb_ep *ep)
 {
 	struct musb_ep		*musb_ep = to_musb_ep(ep);
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_set_wedge\n");
+
 	if (!ep)
 		return -EINVAL;
 
@@ -1432,7 +1425,7 @@ static int musb_gadget_fifo_status(struct usb_ep *ep)
 	struct musb_ep		*musb_ep = to_musb_ep(ep);
 	void __iomem		*epio = musb_ep->hw_ep->regs;
 	int			retval = -EINVAL;
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_fifo_status\n");
+
 	if (musb_ep->desc && !musb_ep->is_in) {
 		struct musb		*musb = musb_ep->musb;
 		int			epnum = musb_ep->current_epnum;
@@ -1459,7 +1452,7 @@ static void musb_gadget_fifo_flush(struct usb_ep *ep)
 	void __iomem	*mbase;
 	unsigned long	flags;
 	u16		csr;
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_fifo_flush\n");
+
 	mbase = musb->mregs;
 
 	spin_lock_irqsave(&musb->lock, flags);
@@ -1511,7 +1504,6 @@ static const struct usb_ep_ops musb_ep_ops = {
 
 static int musb_gadget_get_frame(struct usb_gadget *gadget)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_get_frame\n");
 	struct musb	*musb = gadget_to_musb(gadget);
 
 	return (int)musb_readw(musb->mregs, MUSB_FRAME);
@@ -1519,7 +1511,6 @@ printk("drivers/usb/musb/musb_gadget.c:musb_gadget_get_frame\n");
 
 static int musb_gadget_wakeup(struct usb_gadget *gadget)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_wakeup\n");
 	struct musb	*musb = gadget_to_musb(gadget);
 	void __iomem	*mregs = musb->mregs;
 	unsigned long	flags;
@@ -1595,7 +1586,6 @@ done:
 static int
 musb_gadget_set_self_powered(struct usb_gadget *gadget, int is_selfpowered)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_set_self_powered\n");
 	gadget->is_selfpowered = !!is_selfpowered;
 	return 0;
 }
@@ -1603,7 +1593,7 @@ printk("drivers/usb/musb/musb_gadget.c:musb_gadget_set_self_powered\n");
 static void musb_pullup(struct musb *musb, int is_on)
 {
 	u8 power;
-printk("drivers/usb/musb/musb_gadget.c:musb_pullup\n");
+
 	power = musb_readb(musb->mregs, MUSB_POWER);
 	if (is_on)
 		power |= MUSB_POWER_SOFTCONN;
@@ -1633,7 +1623,6 @@ static int musb_gadget_vbus_session(struct usb_gadget *gadget, int is_active)
 
 static int musb_gadget_vbus_draw(struct usb_gadget *gadget, unsigned mA)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_vbus_draw\n");
 	struct musb	*musb = gadget_to_musb(gadget);
 
 	if (!musb->xceiv->set_power)
@@ -1645,7 +1634,7 @@ static void musb_gadget_work(struct work_struct *work)
 {
 	struct musb *musb;
 	unsigned long flags;
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_work\n");
+
 	musb = container_of(work, struct musb, gadget_work.work);
 	pm_runtime_get_sync(musb->controller);
 	spin_lock_irqsave(&musb->lock, flags);
@@ -1657,7 +1646,6 @@ printk("drivers/usb/musb/musb_gadget.c:musb_gadget_work\n");
 
 static int musb_gadget_pullup(struct usb_gadget *gadget, int is_on)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_pullup\n");
 	struct musb	*musb = gadget_to_musb(gadget);
 	unsigned long	flags;
 
@@ -1704,7 +1692,7 @@ static void
 init_peripheral_ep(struct musb *musb, struct musb_ep *ep, u8 epnum, int is_in)
 {
 	struct musb_hw_ep	*hw_ep = musb->endpoints + epnum;
-printk("drivers/usb/musb/musb_gadget.c:init_peripheral_ep\n");
+
 	memset(ep, 0, sizeof *ep);
 
 	ep->current_epnum = epnum;
@@ -1754,7 +1742,7 @@ static inline void musb_g_init_endpoints(struct musb *musb)
 	u8			epnum;
 	struct musb_hw_ep	*hw_ep;
 	unsigned		count = 0;
-printk("drivers/usb/musb/musb_gadget.c:musb_g_init_endpoints\n");
+
 	/* initialize endpoint list just once */
 	INIT_LIST_HEAD(&(musb->g.ep_list));
 
@@ -1785,7 +1773,7 @@ printk("drivers/usb/musb/musb_gadget.c:musb_g_init_endpoints\n");
 int musb_gadget_setup(struct musb *musb)
 {
 	int status;
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_setup\n");
+
 	/* REVISIT minor race:  if (erroneously) setting up two
 	 * musb peripherals at the same time, only the bus lock
 	 * is probably held.
@@ -1821,7 +1809,6 @@ err:
 
 void musb_gadget_cleanup(struct musb *musb)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_cleanup\n");
 	if (musb->port_mode == MUSB_HOST)
 		return;
 
@@ -1843,7 +1830,6 @@ printk("drivers/usb/musb/musb_gadget.c:musb_gadget_cleanup\n");
 static int musb_gadget_start(struct usb_gadget *g,
 		struct usb_gadget_driver *driver)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_start\n");
 	struct musb		*musb = gadget_to_musb(g);
 	struct usb_otg		*otg = musb->xceiv->otg;
 	unsigned long		flags;
@@ -1892,7 +1878,6 @@ err:
  */
 static int musb_gadget_stop(struct usb_gadget *g)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_gadget_stop\n");
 	struct musb	*musb = gadget_to_musb(g);
 	unsigned long	flags;
 
@@ -1939,7 +1924,6 @@ printk("drivers/usb/musb/musb_gadget.c:musb_gadget_stop\n");
 
 void musb_g_resume(struct musb *musb)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_g_resume\n");
 	musb->is_suspended = 0;
 	switch (musb->xceiv->otg->state) {
 	case OTG_STATE_B_IDLE:
@@ -1963,7 +1947,7 @@ printk("drivers/usb/musb/musb_gadget.c:musb_g_resume\n");
 void musb_g_suspend(struct musb *musb)
 {
 	u8	devctl;
-printk("drivers/usb/musb/musb_gadget.c:musb_g_suspend\n");
+
 	devctl = musb_readb(musb->mregs, MUSB_DEVCTL);
 	musb_dbg(musb, "musb_g_suspend: devctl %02x", devctl);
 
@@ -1992,14 +1976,12 @@ printk("drivers/usb/musb/musb_gadget.c:musb_g_suspend\n");
 /* Called during SRP */
 void musb_g_wakeup(struct musb *musb)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_g_wakeup\n");
 	musb_gadget_wakeup(&musb->g);
 }
 
 /* called when VBUS drops below session threshold, and in other cases */
 void musb_g_disconnect(struct musb *musb)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_g_disconnect\n");
 	void __iomem	*mregs = musb->mregs;
 	u8	devctl = musb_readb(mregs, MUSB_DEVCTL);
 
@@ -2046,7 +2028,6 @@ void musb_g_reset(struct musb *musb)
 __releases(musb->lock)
 __acquires(musb->lock)
 {
-printk("drivers/usb/musb/musb_gadget.c:musb_g_reset\n");
 	void __iomem	*mbase = musb->mregs;
 	u8		devctl = musb_readb(mbase, MUSB_DEVCTL);
 	u8		power;

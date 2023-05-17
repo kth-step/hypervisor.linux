@@ -379,6 +379,9 @@ ENDPROC(v7_flush_kern_dcache_area)
  *	- end     - virtual end address of region
  */
 v7_dma_inv_range:
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	swi 1079
+#else
 	dcache_line_size r2, r3
 	sub	r3, r2, #1
 	tst	r0, r3
@@ -400,6 +403,7 @@ v7_dma_inv_range:
 	cmplo	r0, r1
 	blo	1b
 	dsb	st
+#endif
 	ret	lr
 ENDPROC(v7_dma_inv_range)
 
@@ -409,6 +413,12 @@ ENDPROC(v7_dma_inv_range)
  *	- end     - virtual end address of region
  */
 v7_dma_clean_range:
+#ifdef CONFIG_TRUSTFULL_HYPERVISOR
+	mov r2, r1						@r2 := end
+	mov r1, r0						@r1 := start
+	mov r0, #CLEAN_D_CACHE_REGION	@r0 := CLEAN_D_CACHE_REGION
+	swi #HYPERCALL_CACHE_OP			@Hypercall with code HYPERCALL_CACHE_OP
+#else
 	dcache_line_size r2, r3
 	sub	r3, r2, #1
 	bic	r0, r0, r3
@@ -422,6 +432,7 @@ v7_dma_clean_range:
 	cmp	r0, r1
 	blo	1b
 	dsb	st
+#endif
 	ret	lr
 ENDPROC(v7_dma_clean_range)
 

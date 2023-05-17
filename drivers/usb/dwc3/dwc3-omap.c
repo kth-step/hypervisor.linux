@@ -509,7 +509,7 @@ static int dwc3_omap_probe(struct platform_device *pdev)
 	ret = dwc3_omap_extcon_register(omap);
 	if (ret < 0)
 		goto err1;
-printk("drivers/usb/dwc3.c:dwc3_omap_probe CALLS of_platform_populate\n");
+
 	ret = of_platform_populate(node, NULL, NULL, dev);
 	if (ret) {
 		dev_err(&pdev->dev, "failed to create dwc3 core\n");

@@ -25,6 +25,24 @@
 
 #include <linux/irqchip/irq-omap-intc.h>
 
+
+
+
+
+
+
+
+
+																#include "../../drivers/usb/musb/musb_core.h"
+
+
+
+
+
+
+
+
+
 /* selected INTC register offsets */
 
 #define INTC_REVISION		0x0000
@@ -81,6 +99,7 @@ static u32 intc_readl(u32 reg)
 
 void omap_intc_save_context(void)
 {
+//printk("drivers/irqchip/omap_intc_save_context\n");
 	int i;
 
 	intc_context.sysconfig =
@@ -102,6 +121,7 @@ void omap_intc_save_context(void)
 
 void omap_intc_restore_context(void)
 {
+//printk("drivers/irqchip/omap_intc_restore_context\n");
 	int i;
 
 	intc_writel(INTC_SYSCONFIG, intc_context.sysconfig);
@@ -121,6 +141,7 @@ void omap_intc_restore_context(void)
 
 void omap3_intc_prepare_idle(void)
 {
+//printk("drivers/irqchip/omap3_intc_prepare_idle\n");
 	/*
 	 * Disable autoidle as it can stall interrupt controller,
 	 * cf. errata ID i540 for 3430 (all revisions up to 3.1.x)
@@ -131,6 +152,7 @@ void omap3_intc_prepare_idle(void)
 
 void omap3_intc_resume_idle(void)
 {
+//printk("drivers/irqchip/omap3_intc_resume_idle\n");
 	/* Re-enable autoidle */
 	intc_writel(INTC_SYSCONFIG, 1);
 	intc_writel(INTC_IDLE, 0);
@@ -139,17 +161,20 @@ void omap3_intc_resume_idle(void)
 /* XXX: FIQ and additional INTC support (only MPU at the moment) */
 static void omap_ack_irq(struct irq_data *d)
 {
+//printk("drivers/irqchip/omap_ack_irq\n");
 	intc_writel(INTC_CONTROL, 0x1);
 }
 
 static void omap_mask_ack_irq(struct irq_data *d)
 {
+//printk("drivers/irqchip/omap_mask_ack_irq\n");
 	irq_gc_mask_disable_reg(d);
 	omap_ack_irq(d);
 }
 
 static void __init omap_irq_soft_reset(void)
 {
+//printk("drivers/irqchip/omap_irq_soft_reset\n");
 	unsigned long tmp;
 
 	tmp = intc_readl(INTC_REVISION) & 0xff;
@@ -170,6 +195,7 @@ static void __init omap_irq_soft_reset(void)
 
 int omap_irq_pending(void)
 {
+//printk("drivers/irqchip/omap_irq_pending\n");
 	int i;
 
 	for (i = 0; i < omap_nr_pending; i++)
@@ -180,12 +206,14 @@ int omap_irq_pending(void)
 
 void omap3_intc_suspend(void)
 {
+//printk("drivers/irqchip/omap3_intc_suspend\n");
 	/* A pending interrupt would prevent OMAP from entering suspend */
 	omap_ack_irq(NULL);
 }
 
 static int __init omap_alloc_gc_of(struct irq_domain *d, void __iomem *base)
 {
+//printk("drivers/irqchip/omap_alloc_gc_of\n");
 	int ret;
 	int i;
 
@@ -223,6 +251,7 @@ static int __init omap_alloc_gc_of(struct irq_domain *d, void __iomem *base)
 static void __init omap_alloc_gc_legacy(void __iomem *base,
 		unsigned int irq_start, unsigned int num)
 {
+//printk("drivers/irqchip/omap_alloc_gc_legacy\n");
 	struct irq_chip_generic *gc;
 	struct irq_chip_type *ct;
 
@@ -242,6 +271,7 @@ static void __init omap_alloc_gc_legacy(void __iomem *base,
 
 static int __init omap_init_irq_of(struct device_node *node)
 {
+//printk("drivers/irqchip/omap_init_irq_of\n");
 	int ret;
 
 	omap_irq_base = of_iomap(node, 0);
@@ -262,6 +292,7 @@ static int __init omap_init_irq_of(struct device_node *node)
 
 static int __init omap_init_irq_legacy(u32 base, struct device_node *node)
 {
+//printk("drivers/irqchip/omap_init_irq_legacy\n");
 	int j, irq_base;
 
 	omap_irq_base = ioremap(base, SZ_4K);
@@ -287,16 +318,18 @@ static int __init omap_init_irq_legacy(u32 base, struct device_node *node)
 
 static void __init omap_irq_enable_protection(void)
 {
+//printk("drivers/irqchip/omap_irq_enable_protection\n");
 #ifndef CONFIG_TRUSTFULL_HYPERVISOR	//Hypervisor do not need to protect interrupt controller.
 	u32 reg;
-	reg = intc_readl(INTC_PROTECTION);	//Reads 0x4820_004C INTC_PROTECTION register.
-	reg |= INTC_PROTECTION_ENABLE;
+	reg = intc_readl(INTC_PROTECTION);	//Reads 0x4820_004C INTC_PROTECTION register, which can be
+	reg |= INTC_PROTECTION_ENABLE;		//accessed only from privileged mode.
 	intc_writel(INTC_PROTECTION, reg);
 #endif
 }
 
 static int __init omap_init_irq(u32 base, struct device_node *node)
 {
+//printk("drivers/irqchip/omap_init_irq\n");
 	int ret;
 	/*
 	 * FIXME legacy OMAP DMA driver sitting under arch/arm/plat-omap/dma.c
@@ -332,6 +365,8 @@ omap_intc_handle_irq(struct pt_regs *regs)
 	u32 irqnr;
 	irqnr = intc_readl(INTC_SIR);
 
+static int counter = 0;
+
 	/*
 	 * A spurious IRQ can result if interrupt that triggered the
 	 * sorting is no longer active during the sorting (10 INTC
@@ -356,12 +391,101 @@ omap_intc_handle_irq(struct pt_regs *regs)
 	}
 
 	irqnr &= ACTIVEIRQ_MASK;
+
+	if (irqnr == 17) {
+		counter++;
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq1(%d): %d\n", counter, irqnr);
+	}
+
+/*
+	if (irqnr == 17) {
+		uint32_t intc_base_va = 0xFA200000;
+		uint32_t *intc_itr0 = (uint32_t *)(intc_base_va + 0x80);
+		uint32_t *intc_mir0 = (uint32_t *)(intc_base_va + 0x84);
+		uint32_t *intc_irq0 = (uint32_t *)(intc_base_va + 0x98);
+		uint32_t *intc_itr1 = (uint32_t *)(intc_base_va + 0xA0);
+		uint32_t *intc_mir1 = (uint32_t *)(intc_base_va + 0xA4);
+		uint32_t *intc_irq1 = (uint32_t *)(intc_base_va + 0xB8);
+		uint32_t *intc_itr2 = (uint32_t *)(intc_base_va + 0xC0);
+		uint32_t *intc_mir2 = (uint32_t *)(intc_base_va + 0xC4);
+		uint32_t *intc_irq2 = (uint32_t *)(intc_base_va + 0xD8);
+		uint32_t *intc_itr3 = (uint32_t *)(intc_base_va + 0xE0);
+		uint32_t *intc_mir3 = (uint32_t *)(intc_base_va + 0xE4);
+		uint32_t *intc_irq3 = (uint32_t *)(intc_base_va + 0xF8);
+
+		counter++;
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq1(%d): %d\n", counter, irqnr);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr0 = 0x%x\n", *intc_itr0);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir0 = 0x%x\n", *intc_mir0);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq0 = 0x%x\n", *intc_irq0);
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr1 = 0x%x\n", *intc_itr1);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir1 = 0x%x\n", *intc_mir1);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq1 = 0x%x\n", *intc_irq1);
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr2 = 0x%x\n", *intc_itr2);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir2 = 0x%x\n", *intc_mir2);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq2 = 0x%x\n", *intc_irq2);
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr3 = 0x%x\n", *intc_itr3);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir3 = 0x%x\n", *intc_mir3);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq3 = 0x%x\n", *intc_irq3);
+	}
+*/
+
 	handle_domain_irq(domain, irqnr, regs);
+
+	if (irqnr == 17) {
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq2(%d): %d\n", counter, irqnr);
+	}
+
+/*
+	if (irqnr == 17) {
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq2(%d): %d\n", counter, irqnr);
+		uint32_t intc_base_va = 0xFA200000;
+		uint32_t *intc_itr0 = (uint32_t *)(intc_base_va + 0x80);
+		uint32_t *intc_mir0 = (uint32_t *)(intc_base_va + 0x84);
+		uint32_t *intc_irq0 = (uint32_t *)(intc_base_va + 0x98);
+		uint32_t *intc_itr1 = (uint32_t *)(intc_base_va + 0xA0);
+		uint32_t *intc_mir1 = (uint32_t *)(intc_base_va + 0xA4);
+		uint32_t *intc_irq1 = (uint32_t *)(intc_base_va + 0xB8);
+		uint32_t *intc_itr2 = (uint32_t *)(intc_base_va + 0xC0);
+		uint32_t *intc_mir2 = (uint32_t *)(intc_base_va + 0xC4);
+		uint32_t *intc_irq2 = (uint32_t *)(intc_base_va + 0xD8);
+		uint32_t *intc_itr3 = (uint32_t *)(intc_base_va + 0xE0);
+		uint32_t *intc_mir3 = (uint32_t *)(intc_base_va + 0xE4);
+		uint32_t *intc_irq3 = (uint32_t *)(intc_base_va + 0xF8);
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr0 = 0x%x\n", *intc_itr0);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir0 = 0x%x\n", *intc_mir0);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq0 = 0x%x\n", *intc_irq0);
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr1 = 0x%x\n", *intc_itr1);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir1 = 0x%x\n", *intc_mir1);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq1 = 0x%x\n", *intc_irq1);
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr2 = 0x%x\n", *intc_itr2);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir2 = 0x%x\n", *intc_mir2);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq2 = 0x%x\n", *intc_irq2);
+
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_itr3 = 0x%x\n", *intc_itr3);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_mir3 = 0x%x\n", *intc_mir3);
+		append_format_trace("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: intc_irq3 = 0x%x\n", *intc_irq3);
+
+		if (counter == 4) {
+			print_trace();
+			printk("drivers/irqchip/irq-omap-intc.c:omap_int_c_handle_irq: Infinite while\n");
+			while (1);
+		}
+	}
+*/
 }
 
 static int __init intc_of_init(struct device_node *node,
 			     struct device_node *parent)
 {
+//printk("drivers/irqchip/intc_of_init\n");
 	int ret;
 
 	omap_nr_pending = 3;

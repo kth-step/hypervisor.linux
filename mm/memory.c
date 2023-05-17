@@ -229,9 +229,7 @@ static void free_pte_range(struct mmu_gather *tlb, pmd_t *pmd,
 	pgtable_t token = pmd_pgtable(*pmd);
 	pmd_clear(pmd);
 	pte_free_tlb(tlb, token, addr);
-printk("mm/memory.c:free_pte_range1\n");
 	mm_dec_nr_ptes(tlb->mm);
-printk("mm/memory.c:free_pte_range2\n");
 }
 
 static inline void free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
@@ -243,18 +241,13 @@ static inline void free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
 	unsigned long start;
 
 	start = addr;
-printk("mm/memory.c:free_pmd_range1: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 	pmd = pmd_offset(pud, addr);
 	do {
 		next = pmd_addr_end(addr, end);
-printk("mm/memory.c:free_pmd_range2: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX, pmd = 0x%p, pmd0 = 0x%X, pmd1 = 0x%X, pmd_none_or_clear_bad(pmd) = 0x%x, pmd_none(*pmd) = 0x%x, !(pmd_val(*pmd) & 0x3) = 0x%x\n", tlb->mm, start, end, addr, pmd, pmd_val(pmd)[0], pmd_val(pmd)[1], pmd_none_or_clear_bad(pmd), pmd_none(*pmd), !(pmd_val(*pmd) & 0x3));
 		if (pmd_none_or_clear_bad(pmd))
 			continue;
-printk("mm/memory.c:free_pmd_range3: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 		free_pte_range(tlb, pmd, addr);
-printk("mm/memory.c:free_pmd_range4: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 	} while (pmd++, addr = next, addr != end);
-printk("mm/memory.c:free_pmd_range5: mm = 0x%p, start = 0x%lX, end = 0x%lX, addr = 0x%lX\n", tlb->mm, start, end, addr);
 
 	start &= PUD_MASK;
 	if (start < floor)
@@ -408,12 +401,9 @@ void free_pgd_range(struct mmu_gather *tlb,
 void free_pgtables(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		unsigned long floor, unsigned long ceiling)
 {
-	printk("mm/memory.c:free_pgtables0: mm = 0x%p, &mm->pgtables_bytes = 0x%d\n", tlb->mm, (tlb->mm->pgtables_bytes).counter);
-
 	while (vma) {
 		struct vm_area_struct *next = vma->vm_next;
 		unsigned long addr = vma->vm_start;
-		printk("mm/memory.c:free_pgtables1: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 
 		/*
 		 * Hide vma from rmap and truncate_pagecache before freeing
@@ -423,27 +413,21 @@ void free_pgtables(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		unlink_file_vma(vma);
 
 		if (is_vm_hugetlb_page(vma)) {
-			printk("mm/memory.c:free_pgtables2: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 			hugetlb_free_pgd_range(tlb, addr, vma->vm_end,
 				floor, next ? next->vm_start : ceiling);
 		} else {
-			printk("mm/memory.c:free_pgtables3: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 			/*
 			 * Optimization: gather nearby vmas into one call down
 			 */
 			while (next && next->vm_start <= vma->vm_end + PMD_SIZE
 			       && !is_vm_hugetlb_page(next)) {
-				printk("mm/memory.c:free_pgtables4: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
 				vma = next;
 				next = vma->vm_next;
 				unlink_anon_vmas(vma);
 				unlink_file_vma(vma);
 			}
-			printk("mm/memory.c:free_pgtables5: vma = 0x%p, start = 0x%lX, end = 0x%lX\n", vma, vma->vm_start, vma->vm_end);
-			printk("mm/memory.c:free_pgtables6: mm = 0x%p, addr = 0x%lX, vm_end = 0x%lX\n", tlb->mm, addr, vma->vm_end);
 			free_pgd_range(tlb, addr, vma->vm_end,
 				floor, next ? next->vm_start : ceiling);
-			printk("mm/memory.c:free_pgtables7: mm = 0x%p, addr = 0x%lX, vm_end = 0x%lX\n", tlb->mm, addr, vma->vm_end);
 		}
 		vma = next;
 	}
@@ -473,9 +457,7 @@ int __pte_alloc(struct mm_struct *mm, pmd_t *pmd)
 
 	ptl = pmd_lock(mm, pmd);
 	if (likely(pmd_none(*pmd))) {	/* Has another populated it ? */
-printk("mm/memory.c:__pte_alloc1\n");
 		mm_inc_nr_ptes(mm);
-printk("mm/memory.c:__pte_alloc2\n");
 		pmd_populate(mm, pmd, new);
 		new = NULL;
 	}
@@ -494,7 +476,6 @@ int __pte_alloc_kernel(pmd_t *pmd)
 	smp_wmb(); /* See comment in __pte_alloc */
 
 	spin_lock(&init_mm.page_table_lock);
-
 	if (likely(pmd_none(*pmd))) {	/* Has another populated it ? */
 		pmd_populate_kernel(&init_mm, pmd, new);
 		new = NULL;
@@ -502,7 +483,6 @@ int __pte_alloc_kernel(pmd_t *pmd)
 	spin_unlock(&init_mm.page_table_lock);
 	if (new)
 		pte_free_kernel(&init_mm, new);
-
 	return 0;
 }
 
@@ -2593,7 +2573,6 @@ static int apply_to_pmd_range(struct mm_struct *mm, pud_t *pud,
 				continue;
 			pmd_clear_bad(pmd);
 		}
-
 		err = apply_to_pte_range(mm, pmd, addr, next,
 					 fn, data, create, mask);
 		if (err)
@@ -2630,7 +2609,6 @@ static int apply_to_pud_range(struct mm_struct *mm, p4d_t *p4d,
 				continue;
 			pud_clear_bad(pud);
 		}
-
 		err = apply_to_pmd_range(mm, pud, addr, next,
 					 fn, data, create, mask);
 		if (err)
@@ -2667,7 +2645,6 @@ static int apply_to_p4d_range(struct mm_struct *mm, pgd_t *pgd,
 				continue;
 			p4d_clear_bad(p4d);
 		}
-
 		err = apply_to_pud_range(mm, p4d, addr, next,
 					 fn, data, create, mask);
 		if (err)
@@ -2702,7 +2679,6 @@ static int __apply_to_page_range(struct mm_struct *mm, unsigned long addr,
 				continue;
 			pgd_clear_bad(pgd);
 		}
-
 		err = apply_to_p4d_range(mm, pgd, addr, next,
 					 fn, data, create, &mask);
 		if (err)
@@ -2722,7 +2698,7 @@ static int __apply_to_page_range(struct mm_struct *mm, unsigned long addr,
 int apply_to_page_range(struct mm_struct *mm, unsigned long addr,
 			unsigned long size, pte_fn_t fn, void *data)
 {
-	return __apply_to_page_range(mm, addr, size, fn, data, true);	//3.
+	return __apply_to_page_range(mm, addr, size, fn, data, true);
 }
 EXPORT_SYMBOL_GPL(apply_to_page_range);
 
@@ -4063,9 +4039,7 @@ vm_fault_t finish_fault(struct vm_fault *vmf)
 		if (vmf->prealloc_pte) {
 			vmf->ptl = pmd_lock(vma->vm_mm, vmf->pmd);
 			if (likely(pmd_none(*vmf->pmd))) {
-//printk("mm/memory.c:finish_fault1\n");
 				mm_inc_nr_ptes(vma->vm_mm);
-//printk("mm/memory.c:finish_fault2\n");
 				pmd_populate(vma->vm_mm, vmf->pmd, vmf->prealloc_pte);
 				vmf->prealloc_pte = NULL;
 			}
@@ -4122,10 +4096,8 @@ DEFINE_DEBUGFS_ATTRIBUTE(fault_around_bytes_fops,
 
 static int __init fault_around_debugfs(void)
 {
-//printk("mm/memory.c:fault_around_debugfs START\n");
 	debugfs_create_file_unsafe("fault_around_bytes", 0644, NULL, NULL,
 				   &fault_around_bytes_fops);
-//printk("mm/memory.c:fault_around_debugfs END\n");
 	return 0;
 }
 late_initcall(fault_around_debugfs);
@@ -4614,7 +4586,6 @@ static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
 			return do_wp_page(vmf);
 		entry = pte_mkdirty(entry);
 	}
-
 	entry = pte_mkyoung(entry);
 	if (ptep_set_access_flags(vmf->vma, vmf->address, vmf->pte, entry,
 				vmf->flags & FAULT_FLAG_WRITE)) {
@@ -4633,7 +4604,6 @@ static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
 			flush_tlb_fix_spurious_fault(vmf->vma, vmf->address);
 	}
 unlock:
-
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	return 0;
 }
@@ -4806,6 +4776,7 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	vm_fault_t ret;
 
 	__set_current_state(TASK_RUNNING);
+
 	count_vm_event(PGFAULT);
 	count_memcg_event_mm(vma->vm_mm, PGFAULT);
 
@@ -4842,6 +4813,7 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	}
 
 	mm_account_fault(regs, address, flags, ret);
+
 	return ret;
 }
 EXPORT_SYMBOL_GPL(handle_mm_fault);

@@ -3171,7 +3171,7 @@ static int __init printk_late_init(void)
 {
 	struct console *con;
 	int ret;
-//printk("kernel/printk/printk.c:printk_late_init START\n");
+
 	for_each_console(con) {
 		if (!(con->flags & CON_BOOT))
 			continue;
@@ -3198,7 +3198,6 @@ static int __init printk_late_init(void)
 	ret = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN, "printk:online",
 					console_cpu_notify, NULL);
 	WARN_ON(ret < 0);
-//printk("kernel/printk/printk.c:printk_late_init END\n");
 	return 0;
 }
 late_initcall(printk_late_init);
